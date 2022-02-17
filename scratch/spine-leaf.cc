@@ -1,19 +1,42 @@
 
 
 
-#include "./spine-leaf.h"
+#include "spine-leaf.h"
+
+VecVecQueueDisc CollectData::m_data = std::vector(NO_DEVICE,VecQueueDisc(NO_DEVICE));
+
+VecVecQueueDisc
+CollectData::GetData()
+{
+    for(size_t i = 0 ; i < p2pNetDevices.size() ; i++)
+    {
+        Ptr<PointToPointNetDevice> leaf_netDev = DynamicCast<PointToPointNetDevice>(p2pNetDevices[i].Get(0)) ;
+        Ptr<PointToPointNetDevice> spine_netDev =  DynamicCast<PointToPointNetDevice>(p2pNetDevices[i].Get(1));
+
+        Ptr<Node> leaf = leaf_netDev->GetNode();
+        Ptr<Node> spine = spine_netDev->GetNode();
+
+        auto leaf_tf = leaf->GetObject<TrafficControlLayer>();
+        auto spine_tf = spine->GetObject<TrafficControlLayer>();
+
+        auto leaf_queue = leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
+        auto spine_queue = spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
+
+        uint16_t i_leaf = leaf->GetId();
+        uint16_t i_spine = spine->GetId();
+
+        m_data[i_leaf][i_spine] = leaf_queue->GetStats();
+        m_data[i_spine][i_leaf] = spine_queue->GetStats();
+    }
+
+    return m_data;
+
+}
+
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("SpineAndLeaf");
-
-
-void
-Func(std::string ctx , Ptr<const Packet> pkt)
-{
-    std::cout << ctx;
-    std::cout <<"\t"<<  Simulator::Now() << std::endl;;
-}
 
 
 std::tuple<NodeContainer,NodeContainer,NodeContainer>
@@ -43,7 +66,7 @@ BuildTopology(void)
     NS_LOG_INFO("Installing P2P Channels");
     PointToPointHelper p2p;
 
-    p2p.SetQueue("ns3::DropTailQueue" , "MaxSize" , StringValue("100p"));
+    p2p.SetQueue("ns3::DropTailQueue" , "MaxSize" , QueueSizeValue (QueueSize ("3p")));
 
 
     NS_LOG_INFO("Creating P2P Connections between SERVER and LEAF");
@@ -93,7 +116,7 @@ BuildTopology(void)
         }
     }
 
-
+    p2pNetDevices = leaf_spine_netDevContainer;
 
     NS_LOG_INFO("Assiging ip addresses");
     Ipv4AddressHelper ipv4Address;
@@ -163,30 +186,8 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 void
 GetStats()
 {
-    NodeContainer leafs;
-    for(auto it = NodeList::Begin() ; it < NodeList::End() && leafs.GetN() < LEAF_COUNTER; it++)
-    {
-        Ptr<Node> node = *it;
-
-        if( node->GetType() == Node::Type::LEAF)
-        {
-            leafs.Add(node);
-        }
-    }
-
-
-    Ptr<Node> leaf1  = leafs.Get(0);
-    Ptr<NetDevice> dev1= leaf1->GetDevice(1);
-
-    Ptr<PointToPointNetDevice> p2pNetDev = DynamicCast<PointToPointNetDevice>(leaf1->GetDevice(2));
-    Ptr<DropTailQueue<Packet>> p2pQueue = DynamicCast<DropTailQueue<Packet>>(p2pNetDev->GetQueue());
-
-    //std::cout << "Node ID = " << p2pNetDev->GetChannel()->GetDevice(1)->GetNode()->GetId() << std::endl;
-    std::cout << "Queue Size : " << p2pQueue->GetCurrentSize() << std::endl;
-    if( p2pQueue->GetNPackets() > 0)
-    {
-        std::cout <<"\tTotal Dropped packets=" <<  p2pQueue->GetNPackets() << std::endl;
-    }
+    /// stats of node-2 queue (leaf) connected to a channel with the node-0 (spine)
+    std::cout << CollectData::GetData()[2][0] << std::endl;
 
     Simulator::Schedule(Seconds(1) , &GetStats);
 
@@ -214,7 +215,7 @@ main(int argc , char* argv[])
 
     Simulator::Schedule(Seconds(1) , &GetStats );
     //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
-    Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
+    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
     //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
 
     MobilityHelper mobility;

@@ -2,6 +2,7 @@
 #define SPINE_LEAF_H
 
 
+#include "ns3/traffic-control-module.h"
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -21,6 +22,8 @@
 #include <vector>
 #include<tuple>
 
+
+
 #define SPINE_COUNTER 2
 #define LEAF_COUNTER 4
 #define SERVER_COUNTER 1 // server per LEAF-router
@@ -39,6 +42,24 @@
 #define BASE_NETWORK_MASK "255.255.255.0"
 
 
+static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
 
+#define VecVecQueueDisc std::vector<std::vector<QueueDisc::Stats>>
+#define VecQueueDisc std::vector<QueueDisc::Stats>
+
+const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
+
+using namespace ns3;
+
+class CollectData {
+
+public:
+    static VecVecQueueDisc GetData();
+
+
+private:
+    static  VecVecQueueDisc m_data;
+
+};
 
 #endif
