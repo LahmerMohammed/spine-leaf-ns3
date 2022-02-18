@@ -22,11 +22,13 @@ CollectData::GetData()
         auto leaf_queue = leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
         auto spine_queue = spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
 
-        uint16_t i_leaf = leaf->GetId() + leaf_netDev->GetIfIndex() - 1;
-        uint16_t i_spine = spine->GetId() + spine_netDev->GetIfIndex() - 1;
+        //uint16_t i_leaf = (LEAF_COUNTER*SPINE_COUNTER-1) + SPINE_COUNTER*(leaf->GetId()-SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER+1);
+        uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
+        uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
 
         m_data[i_leaf][i_spine] = leaf_queue->GetStats();
         m_data[i_spine][i_leaf] = spine_queue->GetStats();
+
     }
 
     return m_data;
@@ -186,8 +188,9 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 void
 GetStats()
 {
-    /// stats of node-2 queue (leaf) connected to a channel with the node-0 (spine)
-    std::cout << CollectData::GetData()[2][0] << std::endl;
+    /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
+    std::cout << CollectData::GetData()[7][0];
+
 
     Simulator::Schedule(Seconds(1) , &GetStats);
 
