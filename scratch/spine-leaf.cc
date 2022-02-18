@@ -22,8 +22,8 @@ CollectData::GetData()
         auto leaf_queue = leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
         auto spine_queue = spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
 
-        uint16_t i_leaf = leaf->GetId();
-        uint16_t i_spine = spine->GetId();
+        uint16_t i_leaf = leaf->GetId() + leaf_netDev->GetIfIndex() - 1;
+        uint16_t i_spine = spine->GetId() + spine_netDev->GetIfIndex() - 1;
 
         m_data[i_leaf][i_spine] = leaf_queue->GetStats();
         m_data[i_spine][i_leaf] = spine_queue->GetStats();
