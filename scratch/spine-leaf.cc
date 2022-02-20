@@ -16,18 +16,17 @@ CollectData::GetData()
         Ptr<Node> leaf = leaf_netDev->GetNode();
         Ptr<Node> spine = spine_netDev->GetNode();
 
-        auto leaf_tf = leaf->GetObject<TrafficControlLayer>();
-        auto spine_tf = spine->GetObject<TrafficControlLayer>();
-
-        auto leaf_queue = leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
-        auto spine_queue = spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
+        //auto leaf_tf = leaf->GetObject<TrafficControlLayer>();
+        //auto spine_tf = spine->GetObject<TrafficControlLayer>();
+        auto leaf_queue = leaf_netDev->GetQueue();//leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
+        auto spine_queue = spine_netDev->GetQueue();//spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
 
         //uint16_t i_leaf = (LEAF_COUNTER*SPINE_COUNTER-1) + SPINE_COUNTER*(leaf->GetId()-SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER+1);
         uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
         uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
 
-        m_data[i_leaf][i_spine] = leaf_queue->GetStats();
-        m_data[i_spine][i_leaf] = spine_queue->GetStats();
+        m_data[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        m_data[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
 
     }
 
@@ -67,8 +66,8 @@ BuildTopology(void)
 
     NS_LOG_INFO("Installing P2P Channels");
     PointToPointHelper p2p;
-
-    p2p.SetQueue("ns3::DropTailQueue" , "MaxSize" , QueueSizeValue (QueueSize ("3p")));
+    p2p.DisableFlowControl();
+    p2p.SetQueue("ns3::DropTailQueue" , "MaxSize" , QueueSizeValue (QueueSize ("1500p")));
 
 
     NS_LOG_INFO("Creating P2P Connections between SERVER and LEAF");
@@ -176,10 +175,10 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 
     auto clientApps = udpEchoClient.Install(clientNodes);
 
-    clientApps.Start(Seconds(1.0));
-    clientApps.Stop(Seconds(10.0));
-    serversApps.Start(Seconds(2.0));
-    serversApps.Stop(Seconds(10.0));
+    clientApps.Start(Seconds(2.0));
+    clientApps.Stop(Seconds(100.0));
+    serversApps.Start(Seconds(1.0));
+    serversApps.Stop(Seconds(100.0));
 
 }
 
@@ -189,7 +188,7 @@ void
 GetStats()
 {
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
-    std::cout << CollectData::GetData()[7][0];
+    std::cout << CollectData::GetData()[7][0]<<std::endl;
 
 
     Simulator::Schedule(Seconds(1) , &GetStats);
@@ -265,18 +264,18 @@ main(int argc , char* argv[])
         anim.UpdateNodeDescription(nodes_counter, "server-" + std::to_string(i));
         nodes_counter++;
     }
-
+    /*
     FlowMonitorHelper flowHelper;
     Ptr<FlowMonitor> flowMonitor;
     flowMonitor = flowHelper.InstallAll();
 
-
+  */
 
     Simulator::Stop(Seconds(21.0));
 
     Simulator::Run();
 
-    flowMonitor->SerializeToXmlFile("flow2" , true , true);
+    //flowMonitor->SerializeToXmlFile("flow2" , true , true);
 
     Simulator::Destroy();
 

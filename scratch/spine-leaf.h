@@ -31,8 +31,8 @@
 #define SERVER_LEAF_DELAY MilliSeconds(1)
 #define SERVER_LEAF_DATA_RATE "1Gbps"
 #define LEAF_SPINE_DELAY MilliSeconds(1)
-#define LEAF_SPINE_DATA_RATE "1Mbps"
-#define PACKET_SIZE 7000
+#define LEAF_SPINE_DATA_RATE "9Mbps"
+#define PACKET_SIZE 1500
 #define INTERVAL MilliSeconds(1)
 #define MAX_PACKETS 3000
 
@@ -44,8 +44,8 @@
 
 static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
 
-#define VecVecQueueDisc std::vector<std::vector<QueueDisc::Stats>>
-#define VecQueueDisc std::vector<QueueDisc::Stats>
+#define VecVecQueueDisc std::vector<std::vector<uint32_t>>
+#define VecQueueDisc std::vector<uint32_t>
 
 const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
 
