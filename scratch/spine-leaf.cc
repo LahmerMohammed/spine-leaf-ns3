@@ -1,8 +1,4 @@
-
-
-
 #include "spine-leaf.h"
-
 VecVecQueueDisc CollectData::m_data = std::vector(NO_DEVICE,VecQueueDisc(NO_DEVICE));
 
 VecVecQueueDisc
@@ -182,15 +178,63 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 
 }
 
+/**
+ * \brief on-off traffic generator where nodes can be a generator and a receiver at the same time
+ *
+ * \param all contains all 3rd level nodes
+ */
+void
+GenerateTraffic(NodeContainer& all){
 
+  ApplicationContainer servers, clients;
+    uint16_t port = 2000;
+    for (uint32_t i = 0; i < all.GetN(); ++i){
+
+        for (uint32_t j = 0; j < all.GetN(); ++j){
+            // we assume that a node does not communicate with itself.
+            if(i == j){
+                continue;
+            }
+            ExponentialRandomVariable a;
+            double mean = 1;
+            //double bound = 0.0;
+
+            Ptr<ExponentialRandomVariable> x = CreateObject<ExponentialRandomVariable> ();
+            x->SetAttribute ("Mean", DoubleValue (mean));
+            //x->SetAttribute ("Bound", DoubleValue (bound));
+
+            // The expected value for the mean of the values returned by an
+            // exponentially distributed random
+
+            Ptr<Node> randomNode = all.Get(j);
+            Ptr<Ipv4> ipv4 = randomNode->GetObject<Ipv4>();
+            Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
+
+            OnOffHelper oo = OnOffHelper("ns3::UdpSocketFactory",Address(InetSocketAddress(ipv4Address, port++))); // ip address of server
+
+
+            oo.SetAttribute("OnTime", StringValue ("ns3::ExponentialRandomVariable[Mean=2.0|Bound=5]"));
+            oo.SetAttribute("OffTime", StringValue ("ns3::ExponentialRandomVariable[Mean=1.0|Bound=5]"));
+            oo.SetAttribute("PacketSize",UintegerValue (1024));
+            oo.SetAttribute("DataRate",StringValue ("1024Mbps"));
+            oo.SetAttribute("MaxBytes",StringValue ("700000"));
+
+            NodeContainer onoff;
+            onoff.Add(all.Get(i));
+            servers = oo.Install (onoff);
+            servers.Start (Seconds (0.0));
+            servers.Stop (Seconds (100.0));
+        }
+    }
+
+
+}
 
 void
 GetStats()
 {
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
     std::cout << CollectData::GetData()[7][0]<<std::endl;
-
-
     Simulator::Schedule(Seconds(1) , &GetStats);
 
 }
@@ -212,13 +256,10 @@ main(int argc , char* argv[])
             udpServers.Add(servers.Get(i));
     }
 
-    GenerateTraffic(udpClients,udpServers);
+    GenerateTraffic(servers);
 
 
     Simulator::Schedule(Seconds(1) , &GetStats );
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
 
     MobilityHelper mobility;
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -264,19 +305,17 @@ main(int argc , char* argv[])
         anim.UpdateNodeDescription(nodes_counter, "server-" + std::to_string(i));
         nodes_counter++;
     }
-    /*
+
     FlowMonitorHelper flowHelper;
     Ptr<FlowMonitor> flowMonitor;
     flowMonitor = flowHelper.InstallAll();
 
-  */
 
-    Simulator::Stop(Seconds(21.0));
+    Simulator::Stop(Seconds(100.0));
 
     Simulator::Run();
 
-    //flowMonitor->SerializeToXmlFile("flow2" , true , true);
-
+    flowMonitor->SerializeToXmlFile("flow2.xml" , true , true);
     Simulator::Destroy();
 
     return 0;
