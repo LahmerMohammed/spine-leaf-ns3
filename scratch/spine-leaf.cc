@@ -213,10 +213,10 @@ GenerateTraffic(NodeContainer& all){
             OnOffHelper oo = OnOffHelper("ns3::UdpSocketFactory",Address(InetSocketAddress(ipv4Address, port++))); // ip address of server
 
 
-            oo.SetAttribute("OnTime", StringValue ("ns3::ExponentialRandomVariable[Mean=2.0|Bound=5]"));
-            oo.SetAttribute("OffTime", StringValue ("ns3::ExponentialRandomVariable[Mean=1.0|Bound=5]"));
+            oo.SetAttribute("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.7]"));
+            oo.SetAttribute("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.3]"));
             oo.SetAttribute("PacketSize",UintegerValue (1024));
-            oo.SetAttribute("DataRate",StringValue ("1024Mbps"));
+            oo.SetAttribute("DataRate",StringValue ("1000Mbps"));
             oo.SetAttribute("MaxBytes",StringValue ("700000"));
 
             NodeContainer onoff;
@@ -316,6 +316,7 @@ main(int argc , char* argv[])
     Simulator::Run();
 
     flowMonitor->SerializeToXmlFile("flow2.xml" , true , true);
+
     Simulator::Destroy();
 
     return 0;
