@@ -1,6 +1,7 @@
 
 
-
+#include <numeric>
+#include <random>
 #include "spine-leaf.h"
 
 VecVecQueueDisc CollectData::m_data = std::vector(NO_DEVICE,VecQueueDisc(NO_DEVICE));
@@ -152,10 +153,89 @@ BuildTopology(void)
 }
 
 
-/**
- * \brief generate traffic between two sets (clients and servers)
- * \param two NodeContainer refrences (clients , servers)
- */
+std::vector<uint32_t> zipf_streams(uint32_t total_quantity, uint32_t min_size=15*PACKET_SIZE){
+  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  x->SetAttribute ("Min", DoubleValue (0.0));
+  x->SetAttribute ("Max", DoubleValue (1.0));
+
+  std::vector<uint32_t> ret;
+  double s = 0.0;
+  while (s < total_quantity){
+      double u = x->GetValue();
+      double k = std::log10(4) / std::log10(5);
+      double t = min_size / std::pow(u , (1 / k));
+      s += t;
+      //std::cout<<static_cast<uint32_t>(t)<<std::endl;
+      ret.push_back (static_cast<uint32_t>(t));
+
+  }
+
+  //std::cout<<std::endl;
+
+  ret[ret.size()-1] -= std::accumulate(ret.begin(), ret.end(), 0)-total_quantity;
+  //std::cout<<"Sum: "<<std::accumulate(ret.begin(), ret.end(), 0)<<std::endl;
+  return ret;
+}
+
+
+std::vector<std::vector<uint32_t>> generate_traffic_matrix(void){
+  std::default_random_engine generator;
+  std::uniform_int_distribution<int> distribution(1000000,100000000);
+  std::vector<std::vector<uint32_t>> mat(SERVERS_COUNT, std::vector<uint32_t>(SERVERS_COUNT, 0));
+  for (int i = 0; i < SERVERS_COUNT; ++i)
+  {
+    for (int j = 0; j < SERVERS_COUNT; ++j)
+    {
+      if(i == j)
+        mat[i][j] = 0;
+      else
+        mat[i][j] = distribution(generator);
+      std::cout<<mat[i][j]<<"  ";
+    }
+    std::cout<<std::endl;
+  }
+  return mat;
+}
+
+void generate_traffic(NodeContainer& servers){
+
+  auto mat = generate_traffic_matrix();
+  uint32_t port = 555;
+  for (int i = 0; i < SERVERS_COUNT; ++i)
+  {
+      for (int j = 0; j < SERVERS_COUNT; ++j)
+      {
+        uint32_t total_quantity = mat[i][j];
+        if (total_quantity <= 0)
+              continue;
+
+        uint32_t tcp_quantity = static_cast<uint32_t>(0.2 * total_quantity);
+        uint32_t on_off_noise = total_quantity - tcp_quantity;
+
+        uint32_t pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(on_off_noise) / SIMULATION_DURATION));
+        //double pareto_burst_time = 0.5;
+        //double pareto_idle_time = 0.5;
+
+        Ptr<Ipv4> ipv4 = servers.Get (i)->GetObject<Ipv4>();
+        Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
+
+        OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(ipv4Address, port++)));
+        onoff.SetConstantRate(DataRate(pareto_rate), PACKET_SIZE);
+        onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
+        onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
+        ApplicationContainer clientApps = onoff.Install (servers.Get (j));
+
+        std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
+        for (const auto &item : flowz){
+
+
+
+
+        }
+      }
+  }
+}
+
 void
 GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 {
@@ -187,18 +267,15 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 void
 GetStats()
 {
+
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
     std::cout << CollectData::GetData()[7][0]<<std::endl;
-
-
     Simulator::Schedule(Seconds(1) , &GetStats);
-
 }
 
 int
 main(int argc , char* argv[])
 {
-
     NodeContainer spine,leaf,servers;
     std::tie(spine,leaf,servers) = BuildTopology();
 
@@ -212,7 +289,7 @@ main(int argc , char* argv[])
             udpServers.Add(servers.Get(i));
     }
 
-    GenerateTraffic(udpClients,udpServers);
+    generate_traffic(servers);
 
 
     Simulator::Schedule(Seconds(1) , &GetStats );
@@ -264,18 +341,17 @@ main(int argc , char* argv[])
         anim.UpdateNodeDescription(nodes_counter, "server-" + std::to_string(i));
         nodes_counter++;
     }
-    /*
-    FlowMonitorHelper flowHelper;
-    Ptr<FlowMonitor> flowMonitor;
-    flowMonitor = flowHelper.InstallAll();
 
-  */
+      FlowMonitorHelper flowHelper;
+      Ptr<FlowMonitor> flowMonitor;
+      flowMonitor = flowHelper.InstallAll();
+
 
     Simulator::Stop(Seconds(21.0));
 
     Simulator::Run();
 
-    //flowMonitor->SerializeToXmlFile("flow2" , true , true);
+    flowMonitor->SerializeToXmlFile("flow2.xml" , true , true);
 
     Simulator::Destroy();
 

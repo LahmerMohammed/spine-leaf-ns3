@@ -27,12 +27,15 @@
 #define SPINE_COUNTER 2
 #define LEAF_COUNTER 4
 #define SERVER_COUNTER 1 // server per LEAF-router
+#define SERVERS_COUNT SERVER_COUNTER*LEAF_COUNTER
+
+#define SIMULATION_DURATION 10.0
 
 #define SERVER_LEAF_DELAY MilliSeconds(1)
 #define SERVER_LEAF_DATA_RATE "1Gbps"
 #define LEAF_SPINE_DELAY MilliSeconds(1)
 #define LEAF_SPINE_DATA_RATE "9Mbps"
-#define PACKET_SIZE 1500
+#define PACKET_SIZE 1000
 #define INTERVAL MilliSeconds(1)
 #define MAX_PACKETS 3000
 
