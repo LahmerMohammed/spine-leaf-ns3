@@ -44,21 +44,33 @@
 
 static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
 
-#define VecVecQueueDisc std::vector<std::vector<uint32_t>>
-#define VecQueueDisc std::vector<uint32_t>
+#define VecVecState std::vector<std::vector<State>>
+#define VecState std::vector<State>
 
 const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
 
 using namespace ns3;
 
+
+typedef struct _state
+{
+    QueueDisc::Stats* prev;
+    QueueDisc::Stats* curr;
+
+    _state()
+    {
+        prev = new QueueDisc::Stats();
+        curr = new QueueDisc::Stats();
+    }
+
+}  State;
+
 class CollectData {
 
 public:
-    static VecVecQueueDisc GetData();
-
-
-private:
-    static  VecVecQueueDisc m_data;
+    static  VecVecState m_data;
+    static void UpdateOne(State& state , const QueueDisc::Stats& dest);
+    static void UpdateData();
 
 };
 
