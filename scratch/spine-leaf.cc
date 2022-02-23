@@ -1,8 +1,10 @@
 #include "spine-leaf.h"
-VecVecQueueDisc CollectData::m_data = std::vector(NO_DEVICE,VecQueueDisc(NO_DEVICE));
+VecVecState CollectData::m_data = std::vector(NO_DEVICE,VecState(NO_DEVICE));
 
-VecVecQueueDisc
-CollectData::GetData()
+
+
+void
+CollectData::UpdateData()
 {
     for(size_t i = 0 ; i < p2pNetDevices.size() ; i++)
     {
@@ -21,12 +23,12 @@ CollectData::GetData()
         uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
         uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
 
-        m_data[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
-        m_data[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
 
+        m_data[i_leaf][i_spine].curr->totalDroppedPackets = leaf_queue->GetTotalDroppedPackets();
+        m_data[i_spine][i_leaf].curr->totalDroppedPackets = spine_queue->GetTotalDroppedPackets();
     }
 
-    return m_data;
+    Simulator::Schedule(UPDATE_DATA_INTERVAL , &CollectData::UpdateData);
 
 }
 
@@ -231,11 +233,12 @@ GenerateTraffic(NodeContainer& all){
 }
 
 void
-GetStats()
+PrintStats()
 {
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
-    std::cout << CollectData::GetData()[7][0]<<std::endl;
-    Simulator::Schedule(Seconds(1) , &GetStats);
+    std::cout << "Total dropped: ";
+    std::cout << CollectData::m_data[7][0].curr->totalDroppedPackets<<std::endl;
+    Simulator::Schedule(Seconds(1) , &PrintStats);
 
 }
 
@@ -259,7 +262,11 @@ main(int argc , char* argv[])
     GenerateTraffic(servers);
 
 
-    Simulator::Schedule(Seconds(1) , &GetStats );
+    Simulator::Schedule(UPDATE_DATA_INTERVAL, &CollectData::UpdateData );
+
+    // print stats
+    Simulator::Schedule(Seconds(1), &PrintStats );
+
 
     MobilityHelper mobility;
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -321,3 +328,4 @@ main(int argc , char* argv[])
 
     return 0;
 }
+

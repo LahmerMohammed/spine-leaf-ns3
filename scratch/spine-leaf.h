@@ -41,6 +41,8 @@
 #define BASE_NETWORK "192.168.0.0"
 #define BASE_NETWORK_MASK "255.255.255.0"
 
+#define UPDATE_DATA_INTERVAL MilliSeconds(1)
+
 
 static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
 
@@ -52,15 +54,26 @@ const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
 using namespace ns3;
 
 
+typedef struct _stats
+{
+    uint32_t totalDroppedPackets;
+
+    _stats() :
+    totalDroppedPackets(0)
+    {}
+
+} Stats;
+
+
 typedef struct _state
 {
-    QueueDisc::Stats* prev;
-    QueueDisc::Stats* curr;
+    Stats* prev;
+    Stats* curr;
 
     _state()
     {
-        prev = new QueueDisc::Stats();
-        curr = new QueueDisc::Stats();
+        prev = new Stats();
+        curr = new Stats();
     }
 
 }  State;
@@ -69,7 +82,7 @@ class CollectData {
 
 public:
     static  VecVecState m_data;
-    static void UpdateOne(State& state , const QueueDisc::Stats& dest);
+    static void UpdateOne(State& state , const Stats& dest);
     static void UpdateData();
 
 };
