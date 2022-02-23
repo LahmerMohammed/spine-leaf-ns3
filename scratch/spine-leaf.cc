@@ -201,36 +201,56 @@ void generate_traffic(NodeContainer& servers){
 
   auto mat = generate_traffic_matrix();
   uint32_t port = 555;
+  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  x->SetAttribute ("Min", DoubleValue (0.1));
+  x->SetAttribute ("Max", DoubleValue (SIMULATION_DURATION-3));
+
   for (int i = 0; i < SERVERS_COUNT; ++i)
   {
       for (int j = 0; j < SERVERS_COUNT; ++j)
       {
         uint32_t total_quantity = mat[i][j];
-        if (total_quantity <= 0)
-              continue;
+        if (i == j)
+          continue;
 
         uint32_t tcp_quantity = static_cast<uint32_t>(0.2 * total_quantity);
+        /*
         uint32_t on_off_noise = total_quantity - tcp_quantity;
 
         uint32_t pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(on_off_noise) / SIMULATION_DURATION));
         //double pareto_burst_time = 0.5;
         //double pareto_idle_time = 0.5;
-
+        */
         Ptr<Ipv4> ipv4 = servers.Get (i)->GetObject<Ipv4>();
         Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
-
+        /*
         OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(ipv4Address, port++)));
         onoff.SetConstantRate(DataRate(pareto_rate), PACKET_SIZE);
         onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
         onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
         ApplicationContainer clientApps = onoff.Install (servers.Get (j));
+        */
+        if(i == 1 and j == 2){
+          std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
+          for (const auto &item : flowz){
+              UdpEchoServerHelper  udpServer(port);
+              ApplicationContainer serversApps = udpServer.Install(servers.Get(i));
 
-        std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
-        for (const auto &item : flowz){
 
 
+              UdpEchoClientHelper udpEchoClient(ipv4Address , port++);
+              udpEchoClient.SetAttribute("PacketSize" , UintegerValue(PACKET_SIZE));
+              udpEchoClient.SetAttribute("MaxPackets" , UintegerValue(static_cast<uint32_t >(item/PACKET_SIZE)));
+              udpEchoClient.SetAttribute("Interval" , TimeValue(INTERVAL));
 
 
+              auto clientApps = udpEchoClient.Install(servers.Get (j));
+
+              clientApps.Start(Seconds(2.0));
+              clientApps.Stop(Seconds(100.0));
+              serversApps.Start(Seconds(1.0));
+              serversApps.Stop(Seconds(100.0));
+          }
         }
       }
   }
@@ -347,11 +367,11 @@ main(int argc , char* argv[])
       flowMonitor = flowHelper.InstallAll();
 
 
-    Simulator::Stop(Seconds(21.0));
+    Simulator::Stop(Seconds(SIMULATION_DURATION+2.0));
 
     Simulator::Run();
 
-    flowMonitor->SerializeToXmlFile("flow2.xml" , true , true);
+    flowMonitor->SerializeToXmlFile("flow2.xml", false, true);
 
     Simulator::Destroy();
 
