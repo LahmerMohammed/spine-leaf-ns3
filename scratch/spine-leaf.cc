@@ -214,44 +214,43 @@ void generate_traffic(NodeContainer& servers){
           continue;
 
         uint32_t tcp_quantity = static_cast<uint32_t>(0.2 * total_quantity);
-        /*
+
         uint32_t on_off_noise = total_quantity - tcp_quantity;
 
         uint32_t pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(on_off_noise) / SIMULATION_DURATION));
         //double pareto_burst_time = 0.5;
         //double pareto_idle_time = 0.5;
-        */
+
         Ptr<Ipv4> ipv4 = servers.Get (i)->GetObject<Ipv4>();
         Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
-        /*
+
         OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(ipv4Address, port++)));
         onoff.SetConstantRate(DataRate(pareto_rate), PACKET_SIZE);
         onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
         onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
-        ApplicationContainer clientApps = onoff.Install (servers.Get (j));
-        */
-        if(i == 1 and j == 2){
-          std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
-          for (const auto &item : flowz){
-              UdpEchoServerHelper  udpServer(port);
-              ApplicationContainer serversApps = udpServer.Install(servers.Get(i));
+        onoff.Install (servers.Get (j));
+
+        std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
+        for (const auto &item : flowz){
+            UdpEchoServerHelper  udpServer(port);
+            ApplicationContainer serversApps = udpServer.Install(servers.Get(i));
 
 
 
-              UdpEchoClientHelper udpEchoClient(ipv4Address , port++);
-              udpEchoClient.SetAttribute("PacketSize" , UintegerValue(PACKET_SIZE));
-              udpEchoClient.SetAttribute("MaxPackets" , UintegerValue(static_cast<uint32_t >(item/PACKET_SIZE)));
-              udpEchoClient.SetAttribute("Interval" , TimeValue(INTERVAL));
+            UdpEchoClientHelper udpEchoClient(ipv4Address , port++);
+            udpEchoClient.SetAttribute("PacketSize" , UintegerValue(PACKET_SIZE));
+            udpEchoClient.SetAttribute("MaxPackets" , UintegerValue(static_cast<uint32_t >(item/PACKET_SIZE)));
+            udpEchoClient.SetAttribute("Interval" , TimeValue(INTERVAL));
 
 
-              auto clientApps = udpEchoClient.Install(servers.Get (j));
+            auto clientApps = udpEchoClient.Install(servers.Get (j));
 
-              clientApps.Start(Seconds(2.0));
-              clientApps.Stop(Seconds(100.0));
-              serversApps.Start(Seconds(1.0));
-              serversApps.Stop(Seconds(100.0));
-          }
+            clientApps.Start(Seconds(2.0));
+            clientApps.Stop(Seconds(100.0));
+            serversApps.Start(Seconds(1.0));
+            serversApps.Stop(Seconds(100.0));
         }
+
       }
   }
 }
@@ -298,7 +297,7 @@ void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flow
 
   // opens an existing csv file or creates a new file.
   fout.open("/home/slahmer/PycharmProjects/pythonProject/file.csv", std::ios::out | std::ios::app);
-  fout<<"fid,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
+  fout<<"fid,srcaddr,srcport,destaddr,destport,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
 
   Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowhelp.GetClassifier ());
   std::map<FlowId, FlowMonitor::FlowStats> stats = flow_monitor->GetFlowStats ();
@@ -307,10 +306,12 @@ void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flow
   for (FlowMonitor::FlowStatsContainerCI flowI = stats.begin ();
        flowI != stats.end (); flowI++)
     {
+      Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (flowI->first);
+
 
       #define ATTRIB(name) << "," << flowI->second.name
       #define ATTRIB_TIME(name) <<","<<flowI->second.name.As (Time::NS)
-      fout << flowI->first
+      fout << flowI->first<<","<<t.sourceAddress<<","<<t.sourcePort<<","<<t.destinationAddress<<","<<t.destinationPort
       ATTRIB_TIME (timeFirstTxPacket)
       ATTRIB_TIME (timeFirstRxPacket)
       ATTRIB_TIME (timeLastTxPacket)
