@@ -293,6 +293,56 @@ GetStats()
     Simulator::Schedule(Seconds(1) , &GetStats);
 }
 
+void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flowhelp){
+  std::fstream fout;
+
+  // opens an existing csv file or creates a new file.
+  fout.open("/home/slahmer/PycharmProjects/pythonProject/file.csv", std::ios::out | std::ios::app);
+  fout<<"fid,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
+
+  Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowhelp.GetClassifier ());
+  std::map<FlowId, FlowMonitor::FlowStats> stats = flow_monitor->GetFlowStats ();
+  //uint32_t fid = 0;
+
+  for (FlowMonitor::FlowStatsContainerCI flowI = stats.begin ();
+       flowI != stats.end (); flowI++)
+    {
+
+      #define ATTRIB(name) << "," << flowI->second.name
+      #define ATTRIB_TIME(name) <<","<<flowI->second.name.As (Time::NS)
+      fout << flowI->first
+      ATTRIB_TIME (timeFirstTxPacket)
+      ATTRIB_TIME (timeFirstRxPacket)
+      ATTRIB_TIME (timeLastTxPacket)
+      ATTRIB_TIME (timeLastRxPacket)
+      ATTRIB_TIME (delaySum)
+      ATTRIB_TIME (jitterSum)
+      ATTRIB_TIME (lastDelay)
+      ATTRIB (txBytes)
+      ATTRIB (rxBytes)
+      ATTRIB (txPackets)
+      ATTRIB (rxPackets)
+      ATTRIB (lostPackets)
+      ATTRIB (timesForwarded);
+      if (flowI->second.packetsDropped.size() == 0){
+          fout <<",0,0,0,0";
+      }
+      else{
+          fout<<","<<flowI->second.packetsDropped[0]<<","<< flowI->second.packetsDropped[1] <<","<< flowI->second.packetsDropped[2]<<","<< flowI->second.packetsDropped[3];
+      }
+
+      if (flowI->second.bytesDropped.size() == 0){
+          fout <<",0,0,0,0\n";
+        }
+      else{
+          fout<<","<<flowI->second.bytesDropped[0]<<","<< flowI->second.bytesDropped[1] <<","<< flowI->second.bytesDropped[2]<<","<< flowI->second.bytesDropped[3]<<"\n";
+        }
+    }
+
+
+}
+
+
 int
 main(int argc , char* argv[])
 {
@@ -370,9 +420,8 @@ main(int argc , char* argv[])
     Simulator::Stop(Seconds(SIMULATION_DURATION+2.0));
 
     Simulator::Run();
-
-    flowMonitor->SerializeToXmlFile("flow2.xml", false, true);
-
+    process_stats(flowMonitor, flowHelper);
+    flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
     Simulator::Destroy();
 
     return 0;
