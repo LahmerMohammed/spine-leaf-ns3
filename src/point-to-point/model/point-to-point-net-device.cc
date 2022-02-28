@@ -239,14 +239,16 @@ PointToPointNetDevice::SetInterframeGap (Time t)
 
 void
 PointToPointNetDevice::start_tx(){
-  if(m_history.was_down)
+  if(m_history.was_down){
     m_history.start_tx = Simulator::Now();
+    m_history.was_down = false;
+  }
 }
 
 void
 PointToPointNetDevice::stopped_tx(){
-  m_history.up_duration += (Simulator::Now() - m_history.start_tx).GetMilliSeconds();
-  m_history.was_down = false;
+  m_history.up_duration += Simulator::Now().GetNanoSeconds() - m_history.start_tx.GetNanoSeconds();
+  m_history.was_down = true;
 }
 std::pair<uint64_t, DataRate>
 PointToPointNetDevice::time_slot(){
@@ -256,7 +258,7 @@ PointToPointNetDevice::time_slot(){
   }
   else{
       //start a new calc
-      m_history.up_duration += (Simulator::Now() - m_history.start_tx).GetMilliSeconds();
+      m_history.up_duration += Simulator::Now().GetNanoSeconds() - m_history.start_tx.GetNanoSeconds();
       m_history.start_tx = Simulator::Now();
   }
 

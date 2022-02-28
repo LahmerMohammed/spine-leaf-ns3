@@ -28,13 +28,16 @@
 #define LEAF_COUNTER 4
 #define SERVER_COUNTER 1 // server per LEAF-router
 #define SERVERS_COUNT SERVER_COUNTER*LEAF_COUNTER
+#define NANO_TO_SEC(a) a / 1000000000.0
+#define MICRO_TO_SEC(a) a / 1000000.0
+#define MILI_TO_SEC(a) a / 1000.0
 
 #define SIMULATION_DURATION 10.0
 
 #define SERVER_LEAF_DELAY MilliSeconds(1)
 #define SERVER_LEAF_DATA_RATE "1Gbps"
 #define LEAF_SPINE_DELAY MilliSeconds(1)
-#define LEAF_SPINE_DATA_RATE "1Gbps"
+#define LEAF_SPINE_DATA_RATE "1Mbps"
 #define PACKET_SIZE 1000
 #define INTERVAL MilliSeconds(1)
 #define MAX_PACKETS 3000
@@ -46,9 +49,12 @@
 
 
 static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
+static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pSpinesLeavesNetdevs;
+static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pLeavesSpinesNetdevs;
+
 
 typedef std::vector<std::vector<uint32_t>> vec_stats_t;
-typedef std::vector<std::vector<uint64_t>> vec_stats64_t;
+typedef std::vector<std::vector<long double>> vec_stats64_t;
 
 const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
 
@@ -58,8 +64,13 @@ class CollectData {
 
 public:
     static void GetData();
-    static  vec_stats_t m_q_drops;
-    static  vec_stats64_t m_bandwidths;
+    static  vec_stats_t m_q_drops_leaves;
+    static  vec_stats_t m_q_drops_spines;
+
+    static  vec_stats64_t m_bandwidths_spines;
+    static  vec_stats64_t m_bandwidths_leaves;
+
+
   /*
     inline static void start_tx(const Ptr<Node>& node, uint32_t interface){
       auto key = std::make_pair (node, interface);

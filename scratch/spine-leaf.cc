@@ -1,16 +1,52 @@
 
-
 #include <numeric>
 #include <random>
 #include "spine-leaf.h"
 
-vec_stats_t CollectData::m_q_drops = std::vector(NO_DEVICE,std::vector<uint32_t>(NO_DEVICE));
-vec_stats64_t CollectData::m_bandwidths = std::vector(NO_DEVICE,std::vector<uint64_t>(NO_DEVICE));
+vec_stats_t CollectData::m_q_drops_spines = std::vector(SPINE_COUNTER,std::vector<uint32_t>(LEAF_COUNTER));
+vec_stats_t CollectData::m_q_drops_leaves = std::vector(LEAF_COUNTER,std::vector<uint32_t>(SPINE_COUNTER));
+
+vec_stats64_t CollectData::m_bandwidths_spines = std::vector(SPINE_COUNTER,std::vector<long double>(LEAF_COUNTER));
+vec_stats64_t CollectData::m_bandwidths_leaves = std::vector(LEAF_COUNTER,std::vector<long double>(SPINE_COUNTER));
 
 void
 CollectData::GetData()
 {
-    for(size_t i = 0 ; i < p2pNetDevices.size() ; i++)
+  for (uint32_t i = 0; i < SPINE_COUNTER+LEAF_COUNTER ; ++i)
+  {
+    if(i < SPINE_COUNTER){
+        for (int j = 0; j < LEAF_COUNTER; ++j)
+          {
+            m_q_drops_spines[i][j] = p2pSpinesLeavesNetdevs[i][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
+            //auto tmp = p2pSpinesLeavesNetdevs[i][j]->time_slot();
+            //m_bandwidths_spines[i][j] = tmp.first ;//* tmp.second.GetBitRate();
+
+          }
+      }
+    else{
+        uint32_t leaf = i-2;
+
+        for (int j = 0; j < SPINE_COUNTER; ++j)
+          {
+            m_q_drops_leaves[leaf][j] = p2pLeavesSpinesNetdevs[leaf][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
+            auto tmp = p2pLeavesSpinesNetdevs[leaf][j]->time_slot();
+            auto dura= static_cast<long double>(NANO_TO_SEC(tmp.first));
+            if(dura == 0.0){
+                m_bandwidths_leaves[leaf][j] = 0;
+            }
+            else{
+                m_bandwidths_leaves[leaf][j] = static_cast<long double>(tmp.second.GetBitRate()) *  dura;//* tmp.second.GetBitRate();
+
+            }
+
+          }
+
+      }
+    // TODO for leaves spines interfaces
+
+  }
+  /*
+  for(size_t i = 0 ; i < p2pNetDevices.size() ; i++)
     {
         Ptr<PointToPointNetDevice> leaf_netDev = DynamicCast<PointToPointNetDevice>(p2pNetDevices[i].Get(0)) ;
         Ptr<PointToPointNetDevice> spine_netDev =  DynamicCast<PointToPointNetDevice>(p2pNetDevices[i].Get(1));
@@ -27,13 +63,13 @@ CollectData::GetData()
         uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
         uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
 
-        m_q_drops[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
-        m_q_drops[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
-        auto tmp1 = leaf_netDev->time_slot();
-        auto tmp2 = leaf_netDev->time_slot();
+        //m_q_drops[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        //m_q_drops[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        //auto tmp1 = leaf_netDev->time_slot();
+        //auto tmp2 = leaf_netDev->time_slot();
 
     }
-
+    */
     //return m_data;
 
 }
@@ -110,19 +146,30 @@ BuildTopology(void)
     NS_LOG_INFO("Creating P2P Connections between SPINE and LEAF");
 
     std::vector<NetDeviceContainer> leaf_spine_netDevContainer;
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> spines_leaves_netdevs(SPINE_COUNTER, std::vector<Ptr<PointToPointNetDevice>>(LEAF_COUNTER, nullptr));
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> leaves_spines_netdevs(LEAF_COUNTER, std::vector<Ptr<PointToPointNetDevice>>(SPINE_COUNTER, nullptr));
+
     for(uint16_t i_spine = 0 ; i_spine < SPINE_COUNTER ; i_spine++)
     {
+
         for(uint16_t i_leaf = 0 ; i_leaf < LEAF_COUNTER ; i_leaf++)
         {
             netDeviceContainer = p2p.Install(leaf.Get(i_leaf),
                                              spine.Get(i_spine));
+
+            Ptr<PointToPointNetDevice> leaf_netDev = DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(0)) ;
+            Ptr<PointToPointNetDevice> spine_netDev =  DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(1));
+            spines_leaves_netdevs[i_spine][i_leaf] = spine_netDev;
+            leaves_spines_netdevs[i_leaf][i_spine] = leaf_netDev;
+
 
             leaf_spine_netDevContainer.push_back(netDeviceContainer);
         }
     }
 
     p2pNetDevices = leaf_spine_netDevContainer;
-
+    p2pSpinesLeavesNetdevs = spines_leaves_netdevs;
+    p2pLeavesSpinesNetdevs = leaves_spines_netdevs;
     NS_LOG_INFO("Assiging ip addresses");
     Ipv4AddressHelper ipv4Address;
     ipv4Address.SetBase(BASE_NETWORK , BASE_NETWORK_MASK);
@@ -292,9 +339,11 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 void
 GetStats()
 {
-
+    CollectData::GetData();
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
-    std::cout << CollectData::m_q_drops[7][0]<<std::endl;
+    //leaf1-spine1
+    //std::cout << CollectData::m_q_drops[7][0]<<std::endl;
+    std::cout << CollectData::m_q_drops_leaves[0][0]<<" "<<CollectData::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
     Simulator::Schedule(Seconds(1) , &GetStats);
 }
 
