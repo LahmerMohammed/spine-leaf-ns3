@@ -300,6 +300,7 @@ Ipv4FlowProbe::SendOutgoingLogger (const Ipv4Header &ipHeader, Ptr<const Packet>
     }
 
   Ipv4FlowProbeTag fTag;
+  //m_ipv4->GetInterface (interface).
   bool found = ipPayload->FindFirstMatchingByteTag (fTag);
   if (found)
     {

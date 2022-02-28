@@ -28,6 +28,7 @@
 #include "point-to-point-net-device.h"
 #include "point-to-point-channel.h"
 #include "ppp-header.h"
+#include "../../../scratch/spine-leaf.h"
 
 namespace ns3 {
 
@@ -178,7 +179,11 @@ PointToPointNetDevice::PointToPointNetDevice ()
     m_channel (0),
     m_linkUp (false),
     m_currentPkt (0)
+
+
 {
+  m_history.up_duration = 0.0;
+  m_history.was_down = true;
   NS_LOG_FUNCTION (this);
 }
 
@@ -232,6 +237,34 @@ PointToPointNetDevice::SetInterframeGap (Time t)
   m_tInterframeGap = t;
 }
 
+void
+PointToPointNetDevice::start_tx(){
+  if(m_history.was_down)
+    m_history.start_tx = Simulator::Now();
+}
+
+void
+PointToPointNetDevice::stopped_tx(){
+  m_history.up_duration += (Simulator::Now() - m_history.start_tx).GetMilliSeconds();
+  m_history.was_down = false;
+}
+std::pair<uint64_t, DataRate>
+PointToPointNetDevice::time_slot(){
+  uint64_t ret = 0;
+  if(m_history.was_down){
+      //was already down
+  }
+  else{
+      //start a new calc
+      m_history.up_duration += (Simulator::Now() - m_history.start_tx).GetMilliSeconds();
+      m_history.start_tx = Simulator::Now();
+  }
+
+  ret = m_history.up_duration;
+  m_history.up_duration = 0;
+
+  return std::make_pair (ret,m_bps);
+}
 bool
 PointToPointNetDevice::TransmitStart (Ptr<Packet> p)
 {
@@ -259,8 +292,11 @@ PointToPointNetDevice::TransmitStart (Ptr<Packet> p)
     {
       m_phyTxDropTrace (p);
     }
+  start_tx();
   return result;
 }
+
+
 
 void
 PointToPointNetDevice::TransmitComplete (void)
@@ -284,6 +320,7 @@ PointToPointNetDevice::TransmitComplete (void)
   Ptr<Packet> p = m_queue->Dequeue ();
   if (p == 0)
     {
+      stopped_tx();
       NS_LOG_LOGIC ("No pending packets in device queue after tx complete");
       return;
     }

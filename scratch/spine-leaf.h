@@ -47,8 +47,8 @@
 
 static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
 
-#define VecVecQueueDisc std::vector<std::vector<uint32_t>>
-#define VecQueueDisc std::vector<uint32_t>
+typedef std::vector<std::vector<uint32_t>> vec_stats_t;
+typedef std::vector<std::vector<uint64_t>> vec_stats64_t;
 
 const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
 
@@ -57,12 +57,43 @@ using namespace ns3;
 class CollectData {
 
 public:
-    static VecVecQueueDisc GetData();
+    static void GetData();
+    static  vec_stats_t m_q_drops;
+    static  vec_stats64_t m_bandwidths;
+  /*
+    inline static void start_tx(const Ptr<Node>& node, uint32_t interface){
+      auto key = std::make_pair (node, interface);
+      auto tmp = m_history.find (key);
+      if(tmp == m_history.end()){
+          m_history[key].up_duration = 0;
+      }
+      m_history[key].start_tx = Simulator::Now();;
+    }
+    static void stopped_tx(const Ptr<Node>& node, uint32_t interface){
+      auto key = std::make_pair (node, interface);
+      auto tmp = m_history.find (key);
+      if(tmp == m_history.end()){
+          std::cerr<<"called stopped TX but no entry found on the map"<<std::endl;
+          exit (1);
+      }
+      m_history[key].up_duration += (Simulator::Now() - m_history[key].start_tx).GetMilliSeconds();
 
+    }
 
+    typedef struct{
+      uint64_t up_duration;
+      Time start_tx;
+    } hist_t;
+
+    typedef std::map<std::pair<Ptr<Node>, uint32_t>, hist_t> history_mat_t;
+    */
 private:
-    static  VecVecQueueDisc m_data;
+
+
+
+   // static history_mat_t m_history;
 
 };
+//static CollectData::history_mat_t m_history;
 
 #endif

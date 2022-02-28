@@ -4,9 +4,10 @@
 #include <random>
 #include "spine-leaf.h"
 
-VecVecQueueDisc CollectData::m_data = std::vector(NO_DEVICE,VecQueueDisc(NO_DEVICE));
+vec_stats_t CollectData::m_q_drops = std::vector(NO_DEVICE,std::vector<uint32_t>(NO_DEVICE));
+vec_stats64_t CollectData::m_bandwidths = std::vector(NO_DEVICE,std::vector<uint64_t>(NO_DEVICE));
 
-VecVecQueueDisc
+void
 CollectData::GetData()
 {
     for(size_t i = 0 ; i < p2pNetDevices.size() ; i++)
@@ -26,12 +27,14 @@ CollectData::GetData()
         uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
         uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
 
-        m_data[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
-        m_data[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        m_q_drops[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        m_q_drops[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
+        auto tmp1 = leaf_netDev->time_slot();
+        auto tmp2 = leaf_netDev->time_slot();
 
     }
 
-    return m_data;
+    //return m_data;
 
 }
 
@@ -232,6 +235,9 @@ void generate_traffic(NodeContainer& servers){
 
         std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
         for (const auto &item : flowz){
+
+            double flow_run = x->GetValue();
+
             UdpEchoServerHelper  udpServer(port);
             ApplicationContainer serversApps = udpServer.Install(servers.Get(i));
 
@@ -245,10 +251,10 @@ void generate_traffic(NodeContainer& servers){
 
             auto clientApps = udpEchoClient.Install(servers.Get (j));
 
-            clientApps.Start(Seconds(2.0));
-            clientApps.Stop(Seconds(100.0));
-            serversApps.Start(Seconds(1.0));
-            serversApps.Stop(Seconds(100.0));
+            clientApps.Start(Seconds(flow_run+0.2));
+            clientApps.Stop(Seconds(SIMULATION_DURATION));
+            serversApps.Start(Seconds(flow_run));
+            serversApps.Stop(Seconds(SIMULATION_DURATION));
         }
 
       }
@@ -288,7 +294,7 @@ GetStats()
 {
 
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
-    std::cout << CollectData::GetData()[7][0]<<std::endl;
+    std::cout << CollectData::m_q_drops[7][0]<<std::endl;
     Simulator::Schedule(Seconds(1) , &GetStats);
 }
 
@@ -413,13 +419,12 @@ main(int argc , char* argv[])
         nodes_counter++;
     }
 
-      FlowMonitorHelper flowHelper;
-      Ptr<FlowMonitor> flowMonitor;
-      flowMonitor = flowHelper.InstallAll();
+    FlowMonitorHelper flowHelper;
+    Ptr<FlowMonitor> flowMonitor;
+    flowMonitor = flowHelper.InstallAll();
 
 
     Simulator::Stop(Seconds(SIMULATION_DURATION+2.0));
-
     Simulator::Run();
     process_stats(flowMonitor, flowHelper);
     flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
