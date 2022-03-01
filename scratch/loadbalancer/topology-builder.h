@@ -162,7 +162,7 @@ public:
   inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
     std::uniform_int_distribution<uint64_t> distribution(10000000,1000000000);
-    std::vector<std::vector<uint64_t>> mat(SERVERS_COUNT, std::vector<uint64_t>(servers_count, 0));
+    std::vector<std::vector<uint64_t>> mat(servers_count, std::vector<uint64_t>(servers_count, 0));
     for (uint32_t i = 0; i < servers_count; ++i)
       {
         for (uint32_t j = 0; j < servers_count; ++j)
@@ -186,9 +186,9 @@ public:
     std::uniform_real_distribution<double> distribution(0.1,SIMULATION_DURATION-1.0);
 
 
-    for (int i = 0; i < SERVERS_COUNT; ++i)
+    for (uint32_t i = 0; i < servers.GetN(); ++i)
       {
-        for (int j = 0; j < SERVERS_COUNT; ++j)
+        for (uint32_t j = 0; j < servers.GetN(); ++j)
           {
             uint32_t total_quantity = mat[i][j];
             if (i == j)

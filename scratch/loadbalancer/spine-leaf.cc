@@ -1,19 +1,20 @@
 
 #include <random>
 #include "spine-leaf.h"
-vec_stats_t CollectData::m_q_drops_spines = std::vector(SPINE_COUNTER,std::vector<uint32_t>(LEAF_COUNTER));
-vec_stats_t CollectData::m_q_drops_leaves = std::vector(LEAF_COUNTER,std::vector<uint32_t>(SPINE_COUNTER));
+#include "globals.h"
+vec_stats_t CollectData::m_q_drops_spines = std::vector(Globals::spineCount,std::vector<uint32_t>(Globals::leafCount));
+vec_stats_t CollectData::m_q_drops_leaves = std::vector(Globals::leafCount,std::vector<uint32_t>(Globals::spineCount));
 
-vec_stats64_t CollectData::m_bandwidths_spines = std::vector(SPINE_COUNTER,std::vector<long double>(LEAF_COUNTER));
-vec_stats64_t CollectData::m_bandwidths_leaves = std::vector(LEAF_COUNTER,std::vector<long double>(SPINE_COUNTER));
+vec_stats64_t CollectData::m_bandwidths_spines = std::vector(Globals::spineCount,std::vector<long double>(Globals::leafCount));
+vec_stats64_t CollectData::m_bandwidths_leaves = std::vector(Globals::leafCount,std::vector<long double>(Globals::spineCount));
 
 void
 CollectData::GetData()
 {
-  for (uint32_t i = 0; i < SPINE_COUNTER+LEAF_COUNTER ; ++i)
+  for (uint32_t i = 0; i < Globals::spineCount+Globals::leafCount ; ++i)
   {
-    if(i < SPINE_COUNTER){
-        for (int j = 0; j < LEAF_COUNTER; ++j)
+    if(i < Globals::spineCount){
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
           {
             m_q_drops_spines[i][j] = p2pSpinesLeavesNetdevs[i][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
             //auto tmp = p2pSpinesLeavesNetdevs[i][j]->time_slot();
@@ -24,7 +25,7 @@ CollectData::GetData()
     else{
         uint32_t leaf = i-2;
 
-        for (int j = 0; j < SPINE_COUNTER; ++j)
+        for (uint32_t j = 0; j < Globals::spineCount; ++j)
           {
             m_q_drops_leaves[leaf][j] = p2pLeavesSpinesNetdevs[leaf][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
             auto tmp = p2pLeavesSpinesNetdevs[leaf][j]->time_slot();

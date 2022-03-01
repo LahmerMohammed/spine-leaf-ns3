@@ -2,43 +2,37 @@
 #include "spine-leaf.h"
 #include "topology-builder.h"
 #include "mygym.h"
+#include "globals.h"
 using namespace ns3;
 int
 main(int argc , char* argv[])
 {
-  uint32_t simSeed = 1;
-  double simulationTime = 10; //seconds
-  double envStepTime = 1; //seconds, ns3gym env step time interval
-  uint32_t openGymPort = 5555;
-  uint32_t testArg = 0;
-  uint32_t serverCount = 1;
-  uint32_t spineCount = 2;
-  uint32_t leafCount = 4;
-  CommandLine cmd;
-  cmd.AddValue ("openGymPort", "Port number for OpenGym env. Default: 5555", openGymPort);
-  cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", simSeed);
-  cmd.AddValue ("simTime", "Simulation time in seconds. Default: 10s", simulationTime);
-  cmd.AddValue ("stepTime", "Gym Env step time in seconds. Default: 0.1s", envStepTime);
-  cmd.AddValue ("testArg", "Extra simulation argument. Default: 0", testArg);
 
-  cmd.AddValue ("serverCount", "Extra simulation argument. Default: 0", serverCount);
-  cmd.AddValue ("leafCount", "Extra simulation argument. Default: 0", leafCount);
-  cmd.AddValue ("spineCount", "Extra simulation argument. Default: 0", spineCount);
+  CommandLine cmd;
+  cmd.AddValue ("openGymPort", "Port number for OpenGym env. Default: 5555", Globals::openGymPort);
+  cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", Globals::simSeed);
+  cmd.AddValue ("simTime", "Simulation time in seconds. Default: 10s", Globals::simulationTime);
+  cmd.AddValue ("stepTime", "Gym Env step time in seconds. Default: 0.1s", Globals::envStepTime);
+  cmd.AddValue ("testArg", "Extra simulation argument. Default: 0", Globals::testArg);
+
+  cmd.AddValue ("serverCount", "Extra simulation argument. Default: 0", Globals::serverCount);
+  cmd.AddValue ("leafCount", "Extra simulation argument. Default: 0", Globals::leafCount);
+  cmd.AddValue ("spineCount", "Extra simulation argument. Default: 0", Globals::spineCount);
 
   cmd.Parse (argc, argv);
 
   RngSeedManager::SetSeed (1);
-  RngSeedManager::SetRun (simSeed);
+  RngSeedManager::SetRun (Globals::simSeed);
 
 
   NodeContainer spine,leaf,servers;
-  std::tie(spine,leaf,servers) = TopologyBuilder::BuildTopology(spineCount, leafCount, serverCount);
+  std::tie(spine,leaf,servers) = TopologyBuilder::BuildTopology(Globals::spineCount, Globals::leafCount, Globals::serverCount);
 
 
   NodeContainer udpClients , udpServers;
-  for(uint32_t i = 0 ; i < serverCount*leafCount ; i++)
+  for(uint32_t i = 0 ; i < Globals::serverCount*Globals::leafCount ; i++)
     {
-      if( i < serverCount)
+      if( i < Globals::serverCount)
         udpClients.Add(servers.Get(i));
       else
         udpServers.Add(servers.Get(i));
@@ -65,12 +59,12 @@ main(int argc , char* argv[])
 
 
   // OpenGym Env
-  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
-  Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(envStepTime));
+  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
+  Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
   myGymEnv->SetOpenGymInterface(openGymInterface);
 
 
-  Simulator::Stop(Seconds(simulationTime));
+  Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
   //TopologyBuilder::process_stats(flowMonitor, flowHelper);
   //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
