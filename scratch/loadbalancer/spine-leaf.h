@@ -1,27 +1,24 @@
 #ifndef SPINE_LEAF_H
 #define SPINE_LEAF_H
 
-
-#include "../../build/include/ns3/traffic-control-module.h"
-
-#include "../../build/include/ns3/core-module.h"
-#include "../../build/include/ns3/network-module.h"
-#include "../../build/include/ns3/point-to-point-module.h"
-#include "../../build/include/ns3/internet-stack-helper.h"
-#include "../../build/include/ns3/ipv4-address-helper.h"
-#include "../../build/include/ns3/ipv4-global-routing-helper.h"
-#include "../../build/include/ns3/netanim-module.h"
-#include "../../build/include/ns3/mobility-module.h"
-#include "../../build/include/ns3/v4ping.h"
-#include "../../build/include/ns3/on-off-helper.h"
-#include "../../build/include/ns3/packet-sink-helper.h"
-#include "../../build/include/ns3/v4ping-helper.h"
-#include "../../build/include/ns3/applications-module.h"
-#include "../../build/include/ns3/flow-monitor-module.h"
-#include "../../build/include/ns3/packet-socket.h"
-#include "../../../../../../usr/include/c++/11/vector"
-#include "../../../../../../usr/include/c++/11/tuple"
-
+#include "ns3/traffic-control-module.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-global-routing-helper.h"
+#include "ns3/netanim-module.h"
+#include "ns3/mobility-module.h"
+#include "ns3/v4ping.h"
+#include "ns3/on-off-helper.h"
+#include "ns3/packet-sink-helper.h"
+#include "ns3/v4ping-helper.h"
+#include "ns3/applications-module.h"
+#include "ns3/flow-monitor-module.h"
+#include "ns3/packet-socket.h"
+#include "vector"
+#include "tuple"
 #define SPINE_COUNTER 2
 #define LEAF_COUNTER 4
 #define SERVER_COUNTER 1 // server per LEAF-router

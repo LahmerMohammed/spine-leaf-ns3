@@ -13,19 +13,19 @@ class TopologyBuilder{
 
 public:
   inline static std::tuple<NodeContainer,NodeContainer,NodeContainer>
-  BuildTopology(void)
+  BuildTopology(uint32_t spine_count, uint32_t leaf_count, uint32_t servers_count)
   {
 
     //NS_LOG_INFO("Create Nodes.");
 
     NodeContainer spine;
-    spine.Create(SPINE_COUNTER , Node::Type::SPINE);
+    spine.Create(spine_count , Node::Type::SPINE);
 
     NodeContainer leaf;
-    leaf.Create(LEAF_COUNTER , Node::Type::LEAF);
+    leaf.Create(leaf_count , Node::Type::LEAF);
 
     NodeContainer servers;
-    servers.Create(SERVER_COUNTER * LEAF_COUNTER , Node::Type::SERVER);
+    servers.Create(servers_count * leaf_count , Node::Type::SERVER);
 
 
     //NS_LOG_INFO("Installing Internet Stack");
@@ -56,12 +56,12 @@ public:
     //NS_LOG_INFO("Creating P2P Connections between Leaf and Servers");
 
     std::vector<NetDeviceContainer> server_leaf_netDevContainer;
-    for(uint16_t i_leaf = 0 ; i_leaf < LEAF_COUNTER ; i_leaf++ )
+    for(uint32_t i_leaf = 0 ; i_leaf < leaf_count ; i_leaf++ )
       {
 
-        for(uint16_t i_server = 0 ; i_server < SERVER_COUNTER ; i_server++)
+        for(uint32_t i_server = 0 ; i_server < servers_count ; i_server++)
           {
-            netDeviceContainer = p2p.Install(servers.Get(i_server + i_leaf*SERVER_COUNTER) ,
+            netDeviceContainer = p2p.Install(servers.Get(i_server + i_leaf*servers_count) ,
                                               leaf.Get(i_leaf));
 
             server_leaf_netDevContainer.push_back(netDeviceContainer);
@@ -78,13 +78,13 @@ public:
     //NS_LOG_INFO("Creating P2P Connections between SPINE and LEAF");
 
     std::vector<NetDeviceContainer> leaf_spine_netDevContainer;
-    std::vector<std::vector<Ptr<PointToPointNetDevice>>> spines_leaves_netdevs(SPINE_COUNTER, std::vector<Ptr<PointToPointNetDevice>>(LEAF_COUNTER, nullptr));
-    std::vector<std::vector<Ptr<PointToPointNetDevice>>> leaves_spines_netdevs(LEAF_COUNTER, std::vector<Ptr<PointToPointNetDevice>>(SPINE_COUNTER, nullptr));
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> spines_leaves_netdevs(spine_count, std::vector<Ptr<PointToPointNetDevice>>(leaf_count, nullptr));
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> leaves_spines_netdevs(leaf_count, std::vector<Ptr<PointToPointNetDevice>>(spine_count, nullptr));
 
-    for(uint16_t i_spine = 0 ; i_spine < SPINE_COUNTER ; i_spine++)
+    for(uint32_t i_spine = 0 ; i_spine < spine_count ; i_spine++)
       {
 
-        for(uint16_t i_leaf = 0 ; i_leaf < LEAF_COUNTER ; i_leaf++)
+        for(uint32_t i_leaf = 0 ; i_leaf < leaf_count ; i_leaf++)
           {
             netDeviceContainer = p2p.Install(leaf.Get(i_leaf),
                                               spine.Get(i_spine));
@@ -159,13 +159,13 @@ public:
     serversApps.Stop(Seconds(100.0));
 
   }
-  inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(void){
+  inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
     std::uniform_int_distribution<uint64_t> distribution(10000000,1000000000);
-    std::vector<std::vector<uint64_t>> mat(SERVERS_COUNT, std::vector<uint64_t>(SERVERS_COUNT, 0));
-    for (int i = 0; i < SERVERS_COUNT; ++i)
+    std::vector<std::vector<uint64_t>> mat(SERVERS_COUNT, std::vector<uint64_t>(servers_count, 0));
+    for (uint32_t i = 0; i < servers_count; ++i)
       {
-        for (int j = 0; j < SERVERS_COUNT; ++j)
+        for (uint32_t j = 0; j < servers_count; ++j)
           {
             if(i == j)
               mat[i][j] = 0;
@@ -180,7 +180,7 @@ public:
 
   inline static void generate_traffic(NodeContainer& servers){
 
-    auto mat = generate_traffic_matrix();
+    auto mat = generate_traffic_matrix(servers.GetN());
     uint32_t port = 555;
     std::default_random_engine generator;
     std::uniform_real_distribution<double> distribution(0.1,SIMULATION_DURATION-1.0);
