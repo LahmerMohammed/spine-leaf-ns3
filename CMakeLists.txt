@@ -20,7 +20,10 @@ endif()
 # Project name                        #
 # ##############################################################################
 project(NS3 CXX C)
-
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIR})
+find_package(ZeroMQ REQUIRED)
 file(STRINGS VERSION NS3_VER)
 
 # minimum compiler versions

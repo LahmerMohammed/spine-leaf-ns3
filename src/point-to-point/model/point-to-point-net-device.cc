@@ -28,7 +28,7 @@
 #include "point-to-point-net-device.h"
 #include "point-to-point-channel.h"
 #include "ppp-header.h"
-#include "../../../scratch/spine-leaf.h"
+#include "../../../scratch/loadbalancer/spine-leaf.h"
 
 namespace ns3 {
 

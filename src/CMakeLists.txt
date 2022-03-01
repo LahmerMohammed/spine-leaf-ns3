@@ -67,7 +67,7 @@ if(${NS3_MONOLIB})
   add_library(
     ${lib-ns3-monolib} SHARED ${PROJECT_SOURCE_DIR}/buildsupport/empty.cc
                               "${lib-ns3-static-objs}"
-  )
+          ../scratch/loadbalancer/envdcl.cc ../scratch/loadbalancer/envdcl.h ../scratch/loadbalancer/topology-builder.h)
   set_target_properties(
     ${lib-ns3-monolib} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
   )
