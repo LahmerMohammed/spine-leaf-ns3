@@ -6,7 +6,8 @@
 #define NS3_TOPOLOGY_BUILDER_H
 #include <random>
 #include "spine-leaf.h"
-
+#include "globals.h"
+#include "ns3/ipv4-drill-routing-helper.h"
 using namespace ns3;
 
 class TopologyBuilder{
@@ -26,6 +27,8 @@ public:
 
     NodeContainer servers;
     servers.Create(servers_count * leaf_count , Node::Type::SERVER);
+
+    //Ipv4DrbHelper drb;
 
 
     //NS_LOG_INFO("Installing Internet Stack");
@@ -161,7 +164,7 @@ public:
   }
   inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
-    std::uniform_int_distribution<uint64_t> distribution(10000000,1000000000);
+    std::uniform_int_distribution<uint64_t> distribution(100000,1000000);
     std::vector<std::vector<uint64_t>> mat(servers_count, std::vector<uint64_t>(servers_count, 0));
     for (uint32_t i = 0; i < servers_count; ++i)
       {
@@ -183,7 +186,7 @@ public:
     auto mat = generate_traffic_matrix(servers.GetN());
     uint32_t port = 555;
     std::default_random_engine generator;
-    std::uniform_real_distribution<double> distribution(0.1,SIMULATION_DURATION-1.0);
+    std::uniform_real_distribution<double> distribution(0.1,Globals::simulationTime-1.0);
 
 
     for (uint32_t i = 0; i < servers.GetN(); ++i)
@@ -265,11 +268,11 @@ public:
   inline static void
   GetStats()
   {
-    CollectData::GetData();
+    StateActionManager::GetData();
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
     //leaf1-spine1
     //std::cout << CollectData::m_q_drops[7][0]<<std::endl;
-    std::cout << CollectData::m_q_drops_leaves[0][0]<<" "<<CollectData::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+    std::cout << StateActionManager::m_q_drops_leaves[0][0]<<" "<<StateActionManager::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
     Simulator::Schedule(Seconds(1) , &GetStats);
   }
 

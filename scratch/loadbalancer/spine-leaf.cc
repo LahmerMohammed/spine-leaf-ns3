@@ -27,6 +27,7 @@ StateActionManager::GetData()
 
         for (uint32_t j = 0; j < Globals::spineCount; ++j)
           {
+
             m_q_drops_leaves[leaf][j] = p2pLeavesSpinesNetdevs[leaf][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
             auto tmp = p2pLeavesSpinesNetdevs[leaf][j]->time_slot();
             auto dura= static_cast<long double>(NANO_TO_SEC(tmp.first));
