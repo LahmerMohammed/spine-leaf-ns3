@@ -99,7 +99,7 @@ public:
           }
       }
 
-    p2pNetDevices = leaf_spine_netDevContainer;
+    //p2pNetDevices = leaf_spine_netDevContainer;
     p2pSpinesLeavesNetdevs = spines_leaves_netdevs;
     p2pLeavesSpinesNetdevs = leaves_spines_netdevs;
     //NS_LOG_INFO("Assiging ip addresses");

@@ -26,7 +26,7 @@
 #include "ns3/log.h"
 #include <sstream>
 #include <iostream>
-
+#include "globals.h"
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("DataCenterEnv");
@@ -85,18 +85,18 @@ Define observation space
 Ptr<OpenGymSpace>
 DataCenterEnv::GetObservationSpace()
 {
-  uint32_t nodeNum = 5;
+  //uint32_t nodeNum = 5;
   float low = 0.0;
   float high = 10.0;
-  std::vector<uint32_t> shape = {nodeNum,};
-  std::string dtype = TypeNameGet<uint32_t> ();
+  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  std::string dtype = TypeNameGet<float> ();
 
-  Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
+  //Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
 
   Ptr<OpenGymDictSpace> space = CreateObject<OpenGymDictSpace> ();
-  space->Add("myVector", box);
-  space->Add("myValue", discrete);
+  space->Add("observation", box);
+  //space->Add("myValue", discrete);
 
   NS_LOG_UNCOND ("MyGetObservationSpace: " << space);
   return space;
@@ -110,16 +110,16 @@ DataCenterEnv::GetActionSpace()
 {
   uint32_t nodeNum = 5;
   float low = 0.0;
-  float high = 10.0;
-  std::vector<uint32_t> shape = {nodeNum,};
-  std::string dtype = TypeNameGet<uint32_t> ();
+  float high = 1.0;
+  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  std::string dtype = TypeNameGet<float> ();
 
   Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
 
   Ptr<OpenGymDictSpace> space = CreateObject<OpenGymDictSpace> ();
-  space->Add("myActionVector", box);
-  space->Add("myActionValue", discrete);
+  space->Add("actions", box);
+  //space->Add("myActionValue", discrete);
 
   NS_LOG_UNCOND ("MyGetActionSpace: " << space);
   return space;
@@ -153,29 +153,29 @@ DataCenterEnv::GetObservation()
   uint32_t high = 10.0;
   Ptr<UniformRandomVariable> rngInt = CreateObject<UniformRandomVariable> ();
 
-  std::vector<uint32_t> shape = {nodeNum,};
-  Ptr<OpenGymBoxContainer<uint32_t> > box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape);
+  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  Ptr<OpenGymBoxContainer<float> > box = CreateObject<OpenGymBoxContainer<float> >(shape);
 
   // generate random data
   for (uint32_t i = 0; i<nodeNum; i++){
-    uint32_t value = rngInt->GetInteger(low, high);
+    float value = rngInt->GetValue(low, high);
     box->AddValue(value);
   }
-
+  /*
   Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
   uint32_t value = rngInt->GetInteger(low, high);
   discrete->SetValue(value);
-
+  */
   Ptr<OpenGymDictContainer> data = CreateObject<OpenGymDictContainer> ();
-  data->Add("myVector",box);
-  data->Add("myValue",discrete);
+  data->Add("observation",box);
+  //data->Add("myValue",discrete);
 
   // Print data from tuple
-  Ptr<OpenGymBoxContainer<uint32_t> > mbox = DynamicCast<OpenGymBoxContainer<uint32_t> >(data->Get("myVector"));
-  Ptr<OpenGymDiscreteContainer> mdiscrete = DynamicCast<OpenGymDiscreteContainer>(data->Get("myValue"));
+  Ptr<OpenGymBoxContainer<float> > mbox = DynamicCast<OpenGymBoxContainer<float> >(data->Get("observation"));
+  //Ptr<OpenGymDiscreteContainer> mdiscrete = DynamicCast<OpenGymDiscreteContainer>(data->Get("myValue"));
   NS_LOG_UNCOND ("MyGetObservation: " << data);
   NS_LOG_UNCOND ("---" << mbox);
-  NS_LOG_UNCOND ("---" << mdiscrete);
+  //NS_LOG_UNCOND ("---" << mdiscrete);
 
   return data;
 }
@@ -210,12 +210,12 @@ bool
 DataCenterEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
   Ptr<OpenGymDictContainer> dict = DynamicCast<OpenGymDictContainer>(action);
-  Ptr<OpenGymBoxContainer<uint32_t> > box = DynamicCast<OpenGymBoxContainer<uint32_t> >(dict->Get("myActionVector"));
-  Ptr<OpenGymDiscreteContainer> discrete = DynamicCast<OpenGymDiscreteContainer>(dict->Get("myActionValue"));
+  Ptr<OpenGymBoxContainer<float> > box = DynamicCast<OpenGymBoxContainer<float> >(dict->Get("actions"));
+  //Ptr<OpenGymDiscreteContainer> discrete = DynamicCast<OpenGymDiscreteContainer>(dict->Get("myActionValue"));
 
   NS_LOG_UNCOND ("MyExecuteActions: " << action);
   NS_LOG_UNCOND ("---" << box);
-  NS_LOG_UNCOND ("---" << discrete);
+  //NS_LOG_UNCOND ("---" << discrete);
   return true;
 }
 
