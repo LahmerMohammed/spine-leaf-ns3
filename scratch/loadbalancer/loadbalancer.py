@@ -38,7 +38,7 @@ try:
             print("Step: ", stepIdx)
             obs, reward, done, info = env.step(action)
             print("---obs, reward, done, info: ", obs, reward, done, info)
-            myVector = obs["observation"]
+            myVector = obs
             print("---myVector: ", myVector)
 
             if done:

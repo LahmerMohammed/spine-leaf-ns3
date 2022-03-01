@@ -88,18 +88,16 @@ DataCenterEnv::GetObservationSpace()
   //uint32_t nodeNum = 5;
   float low = 0.0;
   float high = 10.0;
-  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  uint32_t size = Globals::spineCount*Globals::leafCount;
+  std::vector<uint32_t> shape = {size,};
   std::string dtype = TypeNameGet<float> ();
 
   //Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
 
-  Ptr<OpenGymDictSpace> space = CreateObject<OpenGymDictSpace> ();
-  space->Add("observation", box);
-  //space->Add("myValue", discrete);
 
-  NS_LOG_UNCOND ("MyGetObservationSpace: " << space);
-  return space;
+  NS_LOG_UNCOND ("MyGetObservationSpace: " << box);
+  return box;
 }
 
 /*
@@ -108,21 +106,17 @@ Define action space
 Ptr<OpenGymSpace>
 DataCenterEnv::GetActionSpace()
 {
-  uint32_t nodeNum = 5;
   float low = 0.0;
   float high = 1.0;
-  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  uint32_t size = Globals::spineCount*Globals::leafCount;
+  std::vector<uint32_t> shape = {size,};
   std::string dtype = TypeNameGet<float> ();
 
-  Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
 
-  Ptr<OpenGymDictSpace> space = CreateObject<OpenGymDictSpace> ();
-  space->Add("actions", box);
-  //space->Add("myActionValue", discrete);
 
-  NS_LOG_UNCOND ("MyGetActionSpace: " << space);
-  return space;
+  NS_LOG_UNCOND ("MyGetActionSpace: " << box);
+  return box;
 }
 
 /*
@@ -148,41 +142,26 @@ Collect observations
 Ptr<OpenGymDataContainer>
 DataCenterEnv::GetObservation()
 {
-  uint32_t nodeNum = 5;
   uint32_t low = 0.0;
   uint32_t high = 10.0;
   Ptr<UniformRandomVariable> rngInt = CreateObject<UniformRandomVariable> ();
-
-  std::vector<uint32_t> shape = {Globals::spineCount*Globals::leafCount,};
+  uint32_t size = Globals::spineCount*Globals::leafCount;
+  std::vector<uint32_t> shape = {size,};
   Ptr<OpenGymBoxContainer<float> > box = CreateObject<OpenGymBoxContainer<float> >(shape);
 
   // generate random data
-  for (uint32_t i = 0; i<nodeNum; i++){
+  for (uint32_t i = 0; i<size; i++){
     float value = rngInt->GetValue(low, high);
     box->AddValue(value);
   }
-  /*
-  Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
-  uint32_t value = rngInt->GetInteger(low, high);
-  discrete->SetValue(value);
-  */
-  Ptr<OpenGymDictContainer> data = CreateObject<OpenGymDictContainer> ();
-  data->Add("observation",box);
-  //data->Add("myValue",discrete);
 
-  // Print data from tuple
-  Ptr<OpenGymBoxContainer<float> > mbox = DynamicCast<OpenGymBoxContainer<float> >(data->Get("observation"));
-  //Ptr<OpenGymDiscreteContainer> mdiscrete = DynamicCast<OpenGymDiscreteContainer>(data->Get("myValue"));
-  NS_LOG_UNCOND ("MyGetObservation: " << data);
-  NS_LOG_UNCOND ("---" << mbox);
-  //NS_LOG_UNCOND ("---" << mdiscrete);
 
-  return data;
+  NS_LOG_UNCOND ("MyGetObservation: " << box);
+
+  return box;
 }
 
-/*
-Define reward function
-*/
+
 float
 DataCenterEnv::GetReward()
 {
@@ -191,9 +170,7 @@ DataCenterEnv::GetReward()
   return reward;
 }
 
-/*
-Define extra info. Optional
-*/
+
 std::string
 DataCenterEnv::GetExtraInfo()
 {
@@ -203,19 +180,12 @@ DataCenterEnv::GetExtraInfo()
   return myInfo;
 }
 
-/*
-Execute received actions
-*/
 bool
 DataCenterEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
-  Ptr<OpenGymDictContainer> dict = DynamicCast<OpenGymDictContainer>(action);
-  Ptr<OpenGymBoxContainer<float> > box = DynamicCast<OpenGymBoxContainer<float> >(dict->Get("actions"));
-  //Ptr<OpenGymDiscreteContainer> discrete = DynamicCast<OpenGymDiscreteContainer>(dict->Get("myActionValue"));
-
+  Ptr<OpenGymBoxContainer<float> > box = DynamicCast<OpenGymBoxContainer<float> >(action);//dict->Get("actions"));
   NS_LOG_UNCOND ("MyExecuteActions: " << action);
   NS_LOG_UNCOND ("---" << box);
-  //NS_LOG_UNCOND ("---" << discrete);
   return true;
 }
 
