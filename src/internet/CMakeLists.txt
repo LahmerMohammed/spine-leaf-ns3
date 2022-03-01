@@ -16,6 +16,7 @@ set(source_files
     helper/ipv6-static-routing-helper.cc
     helper/rip-helper.cc
     helper/ripng-helper.cc
+    model/aarl-ipv4-routing.cpp
     model/arp-cache.cc
     model/arp-header.cc
     model/arp-l3-protocol.cc
@@ -149,6 +150,7 @@ set(header_files
     helper/ipv6-static-routing-helper.h
     helper/rip-helper.h
     helper/ripng-helper.h
+    model/aarl-ipv4-routing.h
     model/arp-cache.h
     model/arp-header.h
     model/arp-l3-protocol.h

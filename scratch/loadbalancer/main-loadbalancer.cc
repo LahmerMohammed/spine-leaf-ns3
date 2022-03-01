@@ -13,7 +13,6 @@ main(int argc , char* argv[])
   cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", Globals::simSeed);
   cmd.AddValue ("simTime", "Simulation time in seconds. Default: 10s", Globals::simulationTime);
   cmd.AddValue ("stepTime", "Gym Env step time in seconds. Default: 0.1s", Globals::envStepTime);
-  cmd.AddValue ("testArg", "Extra simulation argument. Default: 0", Globals::testArg);
 
   cmd.AddValue ("serverCount", "Extra simulation argument. Default: 0", Globals::serverCount);
   cmd.AddValue ("leafCount", "Extra simulation argument. Default: 0", Globals::leafCount);

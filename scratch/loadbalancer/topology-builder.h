@@ -7,7 +7,6 @@
 #include <random>
 #include "spine-leaf.h"
 #include "globals.h"
-#include "ns3/ipv4-drill-routing-helper.h"
 using namespace ns3;
 
 class TopologyBuilder{
