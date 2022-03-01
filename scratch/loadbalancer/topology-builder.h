@@ -323,6 +323,54 @@ public:
 
   }
 
+  inline static void animation(NodeContainer& spine, NodeContainer& leaf, NodeContainer& servers){
+
+    MobilityHelper mobility;
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    mobility.Install(leaf);
+    mobility.Install(spine);
+    mobility.Install(servers);
+
+
+    AnimationInterface anim("SpinAndLeafAnim.xml");
+
+
+    uint16_t nodes_counter = 0;
+    double x = 15.0 , y = 8.0;
+    for(uint32_t i = 0 ; i < spine.GetN() ; i++)
+      {
+        Ptr<ConstantPositionMobilityModel> n1 = spine.Get(i)->GetObject<ConstantPositionMobilityModel>();
+        n1->SetPosition(Vector(x, y, 0));
+        x+=20.0;
+        anim.UpdateNodeDescription(nodes_counter, "router-layer2-" + std::to_string(i));
+        nodes_counter++;
+
+      }
+
+
+    x = 7.0;
+    y = 22.0;
+    for(uint32_t i = 0 ; i < leaf.GetN() ; i++)
+      {
+        Ptr<ConstantPositionMobilityModel> n1 = leaf.Get(i)->GetObject<ConstantPositionMobilityModel>();
+        n1->SetPosition(Vector(x, y, 0));
+        x+=15.0;
+        anim.UpdateNodeDescription(nodes_counter, "router-layer1-" + std::to_string(i));
+        nodes_counter++;
+      }
+
+    x = 7.0;
+    y = 36.0;
+    for(uint32_t i = 0 ; i < servers.GetN() ; i++)
+      {
+        Ptr<ConstantPositionMobilityModel> n1 = servers.Get(i)->GetObject<ConstantPositionMobilityModel>();
+        n1->SetPosition(Vector(x, y, 0));
+        x+=15.0;
+        anim.UpdateNodeDescription(nodes_counter, "server-" + std::to_string(i));
+        nodes_counter++;
+      }
+
+  }
 
 };
 

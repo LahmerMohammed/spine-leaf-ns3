@@ -1,57 +1,80 @@
-//
-// Created by slahmer on 3/1/22.
-//
+/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2018 Technische Universität Berlin
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Piotr Gawlowicz <gawlowicz@tkn.tu-berlin.de>
+ */
 
-#include "envdcl.h"
-#include "ns3/simulator.h"
-#include "ns3/random-variable-stream.h"
+#include "mygym.h"
+#include "ns3/object.h"
+#include "ns3/core-module.h"
+#include "ns3/wifi-module.h"
+#include "ns3/node-list.h"
+#include "ns3/log.h"
+#include <sstream>
+#include <iostream>
 
-NS_LOG_COMPONENT_DEFINE ("envdcl");
+namespace ns3 {
 
-using namespace ns3;
+NS_LOG_COMPONENT_DEFINE ("DataCenterEnv");
 
-envdcl::envdcl ()
+//NS_OBJECT_ENSURE_REGISTERED (MyGymEnv);
+
+DataCenterEnv::DataCenterEnv ()
 {
   NS_LOG_FUNCTION (this);
   m_interval = Seconds(0.1);
 
-  Simulator::Schedule (Seconds(0.0), &envdcl::ScheduleNextStateRead, this);
+  Simulator::Schedule (Seconds(0.0), &DataCenterEnv::ScheduleNextStateRead, this);
 }
 
-envdcl::envdcl (Time stepTime)
+DataCenterEnv::DataCenterEnv (Time stepTime)
 {
   NS_LOG_FUNCTION (this);
   m_interval = stepTime;
 
-  Simulator::Schedule (Seconds(0.0), &envdcl::ScheduleNextStateRead, this);
+  Simulator::Schedule (Seconds(0.0), &DataCenterEnv::ScheduleNextStateRead, this);
 }
 
 void
-envdcl::ScheduleNextStateRead ()
+DataCenterEnv::ScheduleNextStateRead ()
 {
   NS_LOG_FUNCTION (this);
-  Simulator::Schedule (m_interval, &envdcl::ScheduleNextStateRead, this);
+  Simulator::Schedule (m_interval, &DataCenterEnv::ScheduleNextStateRead, this);
   Notify();
 }
 
-envdcl::~envdcl ()
+DataCenterEnv::~DataCenterEnv ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ns3::envdcl::GetTypeId (void)
+DataCenterEnv::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("envdcl")
-                          .SetParent<OpenGymEnv> ()
-                          .SetGroupName ("OpenGym")
-                          .AddConstructor<envdcl> ()
-      ;
+  static TypeId tid = TypeId ("DataCenterEnv")
+    .SetParent<OpenGymEnv> ()
+    .SetGroupName ("OpenGym")
+    .AddConstructor<DataCenterEnv> ()
+  ;
   return tid;
 }
 
 void
-envdcl::DoDispose ()
+DataCenterEnv::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -60,7 +83,7 @@ envdcl::DoDispose ()
 Define observation space
 */
 Ptr<OpenGymSpace>
-envdcl::GetObservationSpace()
+DataCenterEnv::GetObservationSpace()
 {
   uint32_t nodeNum = 5;
   float low = 0.0;
@@ -83,7 +106,7 @@ envdcl::GetObservationSpace()
 Define action space
 */
 Ptr<OpenGymSpace>
-envdcl::GetActionSpace()
+DataCenterEnv::GetActionSpace()
 {
   uint32_t nodeNum = 5;
   float low = 0.0;
@@ -106,7 +129,7 @@ envdcl::GetActionSpace()
 Define game over condition
 */
 bool
-envdcl::GetGameOver()
+DataCenterEnv::GetGameOver()
 {
   bool isGameOver = false;
   bool test = false;
@@ -114,7 +137,7 @@ envdcl::GetGameOver()
   stepCounter += 1;
   if (stepCounter == 10 && test) {
       isGameOver = true;
-    }
+  }
   NS_LOG_UNCOND ("MyGetGameOver: " << isGameOver);
   return isGameOver;
 }
@@ -122,8 +145,8 @@ envdcl::GetGameOver()
 /*
 Collect observations
 */
-Ptr<ns3::OpenGymDataContainer>
-envdcl::GetObservation()
+Ptr<OpenGymDataContainer>
+DataCenterEnv::GetObservation()
 {
   uint32_t nodeNum = 5;
   uint32_t low = 0.0;
@@ -135,9 +158,9 @@ envdcl::GetObservation()
 
   // generate random data
   for (uint32_t i = 0; i<nodeNum; i++){
-      uint32_t value = rngInt->GetInteger(low, high);
-      box->AddValue(value);
-    }
+    uint32_t value = rngInt->GetInteger(low, high);
+    box->AddValue(value);
+  }
 
   Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
   uint32_t value = rngInt->GetInteger(low, high);
@@ -161,7 +184,7 @@ envdcl::GetObservation()
 Define reward function
 */
 float
-envdcl::GetReward()
+DataCenterEnv::GetReward()
 {
   static float reward = 0.0;
   reward += 1;
@@ -172,7 +195,7 @@ envdcl::GetReward()
 Define extra info. Optional
 */
 std::string
-envdcl::GetExtraInfo()
+DataCenterEnv::GetExtraInfo()
 {
   std::string myInfo = "testInfo";
   myInfo += "|123";
@@ -184,7 +207,7 @@ envdcl::GetExtraInfo()
 Execute received actions
 */
 bool
-envdcl::ExecuteActions(Ptr<OpenGymDataContainer> action)
+DataCenterEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
   Ptr<OpenGymDictContainer> dict = DynamicCast<OpenGymDictContainer>(action);
   Ptr<OpenGymBoxContainer<uint32_t> > box = DynamicCast<OpenGymBoxContainer<uint32_t> >(dict->Get("myActionVector"));
@@ -195,3 +218,5 @@ envdcl::ExecuteActions(Ptr<OpenGymDataContainer> action)
   NS_LOG_UNCOND ("---" << discrete);
   return true;
 }
+
+} // ns3 namespace

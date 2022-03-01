@@ -1,8 +1,6 @@
 
-#include <numeric>
 #include <random>
 #include "spine-leaf.h"
-#include "topology-builder.h"
 vec_stats_t CollectData::m_q_drops_spines = std::vector(SPINE_COUNTER,std::vector<uint32_t>(LEAF_COUNTER));
 vec_stats_t CollectData::m_q_drops_leaves = std::vector(LEAF_COUNTER,std::vector<uint32_t>(SPINE_COUNTER));
 

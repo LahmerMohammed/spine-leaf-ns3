@@ -1,22 +1,18 @@
-//
-// Created by slahmer on 3/1/22.
-//
 
-#ifndef NS3_ENVDCL_H
-#define NS3_ENVDCL_H
-
+#ifndef MY_GYM_ENTITY_H
+#define MY_GYM_ENTITY_H
 
 #include "ns3/opengym-module.h"
 #include "ns3/nstime.h"
 
 namespace ns3 {
 
-class envdcl : public OpenGymEnv
+class DataCenterEnv : public OpenGymEnv
 {
 public:
-  envdcl ();
-  envdcl (Time stepTime);
-  virtual ~envdcl ();
+  DataCenterEnv ();
+  DataCenterEnv (Time stepTime);
+  virtual ~DataCenterEnv ();
   static TypeId GetTypeId (void);
   virtual void DoDispose ();
 
@@ -36,4 +32,5 @@ private:
 
 }
 
-#endif //NS3_ENVDCL_H
+
+#endif // MY_GYM_ENTITY_H
