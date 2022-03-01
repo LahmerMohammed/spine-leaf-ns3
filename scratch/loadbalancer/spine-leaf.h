@@ -49,15 +49,21 @@ typedef std::vector<std::vector<long double>> vec_stats64_t;
 
 using namespace ns3;
 
-class CollectData {
+class StateActionManager {
 
 public:
     static void GetData();
+    static void ApplyNewAction(std::vector<float>);
+
+
+
     static  vec_stats_t m_q_drops_leaves;
     static  vec_stats_t m_q_drops_spines;
 
     static  vec_stats64_t m_bandwidths_spines;
     static  vec_stats64_t m_bandwidths_leaves;
+
+
 
 
 private:

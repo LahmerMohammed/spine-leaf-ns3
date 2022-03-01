@@ -2,14 +2,14 @@
 #include <random>
 #include "spine-leaf.h"
 #include "globals.h"
-vec_stats_t CollectData::m_q_drops_spines = std::vector(Globals::spineCount,std::vector<uint32_t>(Globals::leafCount));
-vec_stats_t CollectData::m_q_drops_leaves = std::vector(Globals::leafCount,std::vector<uint32_t>(Globals::spineCount));
+vec_stats_t StateActionManager::m_q_drops_spines = std::vector(Globals::spineCount,std::vector<uint32_t>(Globals::leafCount));
+vec_stats_t StateActionManager::m_q_drops_leaves = std::vector(Globals::leafCount,std::vector<uint32_t>(Globals::spineCount));
 
-vec_stats64_t CollectData::m_bandwidths_spines = std::vector(Globals::spineCount,std::vector<long double>(Globals::leafCount));
-vec_stats64_t CollectData::m_bandwidths_leaves = std::vector(Globals::leafCount,std::vector<long double>(Globals::spineCount));
+vec_stats64_t StateActionManager::m_bandwidths_spines = std::vector(Globals::spineCount,std::vector<long double>(Globals::leafCount));
+vec_stats64_t StateActionManager::m_bandwidths_leaves = std::vector(Globals::leafCount,std::vector<long double>(Globals::spineCount));
 
 void
-CollectData::GetData()
+StateActionManager::GetData()
 {
   for (uint32_t i = 0; i < Globals::spineCount+Globals::leafCount ; ++i)
   {
