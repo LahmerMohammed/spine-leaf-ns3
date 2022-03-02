@@ -316,7 +316,7 @@ InternetStackHelper::Install (Ptr<Node> node) const
           Ipv4RlRoutingHelper rlRouting;
           std::cout<<"InternetStackHelper::rl_enable"<<node->GetId()<<std::endl;
           auto tmp = DynamicCast<Ipv4ListRouting>(ipv4Routing);
-          tmp->AddRoutingProtocol(rlRouting.Create(node), 0);
+          tmp->AddRoutingProtocol(rlRouting.Create(node), 10);
         }
 
       ipv4->SetRoutingProtocol (ipv4Routing);

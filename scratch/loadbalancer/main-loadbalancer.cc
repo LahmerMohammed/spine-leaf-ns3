@@ -38,8 +38,11 @@ main(int argc , char* argv[])
     }
 
   TopologyBuilder::generate_traffic(servers);
-
-
+  auto ipv4 = leaf.Get (0)->GetObject<Ipv4> ();
+  auto tmp = ipv4->GetRoutingProtocol();
+  auto tmp2 = DynamicCast<Ipv4ListRouting>(tmp);
+  int16_t priority;
+  auto routing = tmp2->GetRoutingProtocol (0, priority);
   //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
