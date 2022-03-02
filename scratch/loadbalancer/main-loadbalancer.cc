@@ -43,6 +43,7 @@ main(int argc , char* argv[])
   auto tmp2 = DynamicCast<Ipv4ListRouting>(tmp);
   int16_t priority;
   auto routing = tmp2->GetRoutingProtocol (0, priority);
+  routing->
   //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
