@@ -67,7 +67,7 @@ if(${NS3_MONOLIB})
   add_library(
     ${lib-ns3-monolib} SHARED ${PROJECT_SOURCE_DIR}/buildsupport/empty.cc
                               "${lib-ns3-static-objs}"
-  )
+          ../scratch/loadbalancer/topology-builder.h ../scratch/loadbalancer/globals.h internet/model/aarl-ipv4-routing.cpp internet/model/aarl-ipv4-routing.h)
   set_target_properties(
     ${lib-ns3-monolib} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
   )

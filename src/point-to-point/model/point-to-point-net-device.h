@@ -190,6 +190,15 @@ public:
   virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
   virtual bool SupportsSendFrom (void) const;
 
+  typedef struct{
+    uint64_t up_duration;
+    Time start_tx;
+    bool was_down;
+  } hist_t;
+
+  std::pair<uint64_t, DataRate> time_slot();
+
+
 protected:
   /**
    * \brief Handler for MPI receive event
@@ -199,7 +208,9 @@ protected:
   void DoMpiReceive (Ptr<Packet> p);
 
 private:
-
+  void start_tx();
+  void stopped_tx();
+  hist_t m_history;
   /**
    * \brief Assign operator
    *

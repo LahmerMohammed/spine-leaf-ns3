@@ -1,9 +1,7 @@
 #ifndef SPINE_LEAF_H
 #define SPINE_LEAF_H
 
-
 #include "ns3/traffic-control-module.h"
-
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
@@ -19,17 +17,13 @@
 #include "ns3/applications-module.h"
 #include "ns3/flow-monitor-module.h"
 #include "ns3/packet-socket.h"
-#include <vector>
-#include<tuple>
+#include "vector"
+#include "tuple"
+#define NANO_TO_SEC(a) a / 1000000000.0
+#define MICRO_TO_SEC(a) a / 1000000.0
+#define MILI_TO_SEC(a) a / 1000.0
 
-
-
-#define SPINE_COUNTER 2
-#define LEAF_COUNTER 4
-#define SERVER_COUNTER 1 // server per LEAF-router
-#define SERVERS_COUNT SERVER_COUNTER*LEAF_COUNTER
-
-#define SIMULATION_DURATION 10.0
+#define SIMULATION_DURATION 30.0
 
 #define SERVER_LEAF_DELAY MilliSeconds(1)
 #define SERVER_LEAF_DATA_RATE "1Gbps"
@@ -45,23 +39,36 @@
 #define BASE_NETWORK_MASK "255.255.255.0"
 
 
-static std::vector<ns3::NetDeviceContainer> p2pNetDevices;
+static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pSpinesLeavesNetdevs;
+static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pLeavesSpinesNetdevs;
 
-#define VecVecQueueDisc std::vector<std::vector<uint32_t>>
-#define VecQueueDisc std::vector<uint32_t>
 
-const uint16_t NO_DEVICE =  2*LEAF_COUNTER*SPINE_COUNTER ;
+typedef std::vector<std::vector<uint32_t>> vec_stats_t;
+typedef std::vector<std::vector<long double>> vec_stats64_t;
+
 
 using namespace ns3;
 
-class CollectData {
+class StateActionManager {
 
 public:
-    static VecVecQueueDisc GetData();
+    static void GetData();
+    static void ApplyNewAction(std::vector<float>);
+
+
+
+    static  vec_stats_t m_q_drops_leaves;
+    static  vec_stats_t m_q_drops_spines;
+
+    static  vec_stats64_t m_bandwidths_spines;
+    static  vec_stats64_t m_bandwidths_leaves;
+
+
 
 
 private:
-    static  VecVecQueueDisc m_data;
+
+
 
 };
 

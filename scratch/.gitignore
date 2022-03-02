@@ -2,6 +2,7 @@
 /*
 !.gitignore
 !subdir/
+!loadbalancer
 !*.cc
 !*.h
 !CMakeLists.txt
