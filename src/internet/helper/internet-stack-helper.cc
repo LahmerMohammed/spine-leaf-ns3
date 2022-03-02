@@ -47,6 +47,7 @@
 #include "ns3/icmpv6-l4-protocol.h"
 #include "ns3/global-router-interface.h"
 #include "ns3/traffic-control-layer.h"
+#include "aarl-ipv4-routing-helper.h"
 #include <limits>
 #include <map>
 
@@ -120,9 +121,12 @@ InternetStackHelper::Initialize ()
   SetTcp ("ns3::TcpL4Protocol");
   Ipv4StaticRoutingHelper staticRouting;
   Ipv4GlobalRoutingHelper globalRouting;
+
   Ipv4ListRoutingHelper listRouting;
   Ipv6StaticRoutingHelper staticRoutingv6;
-  listRouting.Add (staticRouting, 0);
+
+  listRouting.Add (staticRouting, 1);
+
   listRouting.Add (globalRouting, -10);
   SetRoutingHelper (listRouting);
   SetRoutingHelper (staticRoutingv6);
@@ -303,8 +307,18 @@ InternetStackHelper::Install (Ptr<Node> node) const
           arp->SetAttribute ("RequestJitter", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
         }
       // Set routing
+
       Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
       Ptr<Ipv4RoutingProtocol> ipv4Routing = m_routing->Create (node);
+
+      if (InternetStackHelper::rl_enable && DynamicCast<Ipv4ListRouting>(ipv4Routing))
+        {
+          Ipv4RlRoutingHelper rlRouting;
+          std::cout<<"InternetStackHelper::rl_enable"<<node->GetId()<<std::endl;
+          auto tmp = DynamicCast<Ipv4ListRouting>(ipv4Routing);
+          tmp->AddRoutingProtocol(rlRouting.Create(node), 0);
+        }
+
       ipv4->SetRoutingProtocol (ipv4Routing);
     }
 

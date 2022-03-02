@@ -10,6 +10,7 @@ NS_LOG_COMPONENT_DEFINE ("Ipv4RlRouting");
 
 ns3::Ipv4RlRouting::Ipv4RlRouting ()
 {
+  std::cout<<"==========================================Ipv4RlRouting()"<<this->m_ipv4<<std::endl;
 
 }
 
@@ -39,12 +40,16 @@ ns3::Ipv4RlRouting::GetTypeId (void)
 void
 ns3::Ipv4RlRouting::AddRoute (ns3::Ipv4Address network, ns3::Ipv4Mask networkMask, uint32_t port)
 {
+  std::cout<<"==========================================AddRoute"<<std::endl;
+
 }
 
 
 std::vector<ns3::DrillRouteEntry>
 ns3::Ipv4RlRouting::LookupDrillRouteEntries (ns3::Ipv4Address dest)
 {
+  std::cout<<"==========================================LookupDrillRouteEntries()"<<this->m_ipv4<<std::endl;
+
   return std::vector<DrillRouteEntry> ();
 }
 
@@ -52,6 +57,8 @@ ns3::Ipv4RlRouting::LookupDrillRouteEntries (ns3::Ipv4Address dest)
 uint32_t
 ns3::Ipv4RlRouting::CalculateQueueLength (uint32_t interface)
 {
+  std::cout<<"==========================================CalculateQueueLength()"<<this->m_ipv4<<std::endl;
+
   return 0;
 }
 
@@ -59,7 +66,9 @@ ns3::Ipv4RlRouting::CalculateQueueLength (uint32_t interface)
 ns3::Ptr<ns3::Ipv4Route>
 ns3::Ipv4RlRouting::ConstructIpv4Route (uint32_t port, ns3::Ipv4Address destAddress)
 {
-  return ns3::Ptr<ns3::Ipv4Route> ();
+  std::cout<<"==========================================ConstructIpv4Route()"<<this->m_ipv4<<std::endl;
+
+  return {};
 }
 
 
@@ -67,7 +76,9 @@ ns3::Ptr<ns3::Ipv4Route>
 ns3::Ipv4RlRouting::RouteOutput (ns3::Ptr<ns3::Packet> p, const ns3::Ipv4Header &header,
                                  ns3::Ptr<ns3::NetDevice> oif, ns3::Socket::SocketErrno &sockerr)
 {
-  return ns3::Ptr<ns3::Ipv4Route> ();
+  //std::cout<<"==========================================RouteOutput()"<<this->m_ipv4<<std::endl;
+
+  return {};
 }
 
 
@@ -79,6 +90,9 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
                                 ns3::Ipv4RoutingProtocol::LocalDeliverCallback lcb,
                                 ns3::Ipv4RoutingProtocol::ErrorCallback ecb)
 {
+
+  //std::cout<<"==========================================RouteInput()"<<this->m_ipv4<<std::endl;
+
   return false;
 }
 
@@ -86,30 +100,39 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
 void
 ns3::Ipv4RlRouting::NotifyInterfaceUp (uint32_t interface)
 {
+  std::cout<<"==========================================NotifyInterfaceUp()"<<this->m_ipv4<<std::endl;
+
 }
 
 
 void
 ns3::Ipv4RlRouting::NotifyInterfaceDown (uint32_t interface)
 {
+  std::cout<<"==========================================NotifyInterfaceDown()"<<this->m_ipv4<<std::endl;
+
 }
 
 
 void
 ns3::Ipv4RlRouting::NotifyAddAddress (uint32_t interface, ns3::Ipv4InterfaceAddress address)
 {
+  std::cout<<"==========================================NotifyAddAddress()"<<this->m_ipv4<<std::endl;
+
 }
 
 
 void
 ns3::Ipv4RlRouting::NotifyRemoveAddress (uint32_t interface, ns3::Ipv4InterfaceAddress address)
 {
+  std::cout<<"==========================================NotifyRemoveAddress()"<<this->m_ipv4<<std::endl;
+
 }
 
 
 void
 ns3::Ipv4RlRouting::SetIpv4 (ns3::Ptr<ns3::Ipv4> ipv4)
 {
+
 }
 
 

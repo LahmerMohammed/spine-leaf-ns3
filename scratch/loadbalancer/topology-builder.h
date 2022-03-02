@@ -33,7 +33,9 @@ public:
     //NS_LOG_INFO("Installing Internet Stack");
 
     InternetStackHelper internetStack;
+    InternetStackHelper::rl_enable = true;
     internetStack.Install(leaf);
+    InternetStackHelper::rl_enable = false;
     internetStack.Install(spine);
     internetStack.Install(servers);
 

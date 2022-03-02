@@ -87,6 +87,9 @@ class InternetStackHelper : public PcapHelperForIpv4, public PcapHelperForIpv6,
                             public AsciiTraceHelperForIpv4, public AsciiTraceHelperForIpv6
 {
 public:
+
+  inline static bool rl_enable = false;
+
   /**
    * Create a new InternetStackHelper which uses a mix of static routing
    * and global routing by default. The static routing protocol 

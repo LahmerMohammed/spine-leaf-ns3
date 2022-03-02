@@ -1,6 +1,7 @@
 set(name)
 
 set(source_files
+    helper/aarl-ipv4-routing-helper.cpp
     helper/internet-stack-helper.cc
     helper/internet-trace-helper.cc
     helper/ipv4-address-helper.cc
@@ -135,6 +136,7 @@ set(private_header_files)
 
 set(header_files
     ${header_files}
+    helper/aarl-ipv4-routing-helper.h
     helper/internet-stack-helper.h
     helper/internet-trace-helper.h
     helper/ipv4-address-helper.h

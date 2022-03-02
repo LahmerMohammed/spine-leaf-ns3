@@ -56,18 +56,18 @@ main(int argc , char* argv[])
   /// OPENGYM
 
 
-
+    /*
   // OpenGym Env
   Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
   Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
   myGymEnv->SetOpenGymInterface(openGymInterface);
-
+    */
 
   Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
   //TopologyBuilder::process_stats(flowMonitor, flowHelper);
   //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
-  openGymInterface->NotifySimulationEnd();
+  //openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
   return 0;
