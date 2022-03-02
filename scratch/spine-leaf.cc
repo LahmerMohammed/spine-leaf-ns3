@@ -22,9 +22,9 @@ CollectData::GetData()
         auto leaf_queue = leaf_netDev->GetQueue();//leaf_tf->GetRootQueueDiscOnDevice(leaf_netDev);
         auto spine_queue = spine_netDev->GetQueue();//spine_tf->GetRootQueueDiscOnDevice(spine_netDev);
 
-        //uint16_t i_leaf = (LEAF_COUNTER*SPINE_COUNTER-1) + SPINE_COUNTER*(leaf->GetId()-SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER+1);
+        //uint16_t i_leaf = (LEAF_COUNTER*SPINE_COUNTER) + SPINE_COUNTER*(leaf->GetId()-SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER+1);
         uint16_t i_spine = LEAF_COUNTER*spine->GetId() + spine_netDev->GetIfIndex() - 1;
-        uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 2);
+        uint16_t i_leaf = SPINE_COUNTER*(LEAF_COUNTER + leaf->GetId() - SPINE_COUNTER) + leaf_netDev->GetIfIndex() - (SERVER_COUNTER + 1);
 
         m_data[i_leaf][i_spine] = leaf_queue->GetTotalDroppedPacketsBeforeEnqueue();
         m_data[i_spine][i_leaf] = spine_queue->GetTotalDroppedPacketsBeforeEnqueue();
@@ -179,6 +179,7 @@ std::vector<uint32_t> zipf_streams(uint32_t total_quantity, uint32_t min_size=15
 
 
 std::vector<std::vector<uint32_t>> generate_traffic_matrix(void){
+
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution(1000000,100000000);
   std::vector<std::vector<uint32_t>> mat(SERVERS_COUNT, std::vector<uint32_t>(SERVERS_COUNT, 0));
@@ -217,9 +218,11 @@ void generate_traffic(NodeContainer& servers){
 
         uint32_t on_off_noise = total_quantity - tcp_quantity;
 
+
         uint32_t pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(on_off_noise) / SIMULATION_DURATION));
         //double pareto_burst_time = 0.5;
         //double pareto_idle_time = 0.5;
+
 
         Ptr<Ipv4> ipv4 = servers.Get (i)->GetObject<Ipv4>();
         Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
@@ -246,9 +249,9 @@ void generate_traffic(NodeContainer& servers){
             auto clientApps = udpEchoClient.Install(servers.Get (j));
 
             clientApps.Start(Seconds(2.0));
-            clientApps.Stop(Seconds(100.0));
+            clientApps.Stop(Seconds(SIMULATION_DURATION));
             serversApps.Start(Seconds(1.0));
-            serversApps.Stop(Seconds(100.0));
+            serversApps.Stop(Seconds(SIMULATION_DURATION));
         }
 
       }
@@ -282,13 +285,12 @@ GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
 }
 
 
-
 void
 GetStats()
 {
 
-    /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
-    std::cout << CollectData::GetData()[7][0]<<std::endl;
+    /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0-intercface-1 (spine)
+    /// std::cout << CollectData::GetData()[7][0]<<std::endl;
     Simulator::Schedule(Seconds(1) , &GetStats);
 }
 
@@ -296,7 +298,9 @@ void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flow
   std::fstream fout;
 
   // opens an existing csv file or creates a new file.
-  fout.open("/home/slahmer/PycharmProjects/pythonProject/file.csv", std::ios::out | std::ios::app);
+//  fout.open("/home/slahmer/PycharmProjects/pythonProject/file.csv", std::ios::out | std::ios::app);
+  fout.open("file.csv", std::ios::out | std::ios::app);
+
   fout<<"fid,srcaddr,srcport,destaddr,destport,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
 
   Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowhelp.GetClassifier ());
@@ -363,10 +367,9 @@ main(int argc , char* argv[])
     generate_traffic(servers);
 
 
-    Simulator::Schedule(Seconds(1) , &GetStats );
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
-    //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
+    //Simulator::Schedule(Seconds(1) , &GetStats );
+
+
 
     MobilityHelper mobility;
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
