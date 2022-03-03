@@ -14,7 +14,7 @@ public:
   inline static double envStepTime = 1.0;
   inline static uint32_t serverCount = 1;
   inline static uint32_t leafCount = 4;
-  inline static uint32_t spineCount = 5;
+  inline static uint32_t spineCount = 2;
 
 };
 

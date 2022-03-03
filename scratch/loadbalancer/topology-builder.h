@@ -13,7 +13,7 @@ using namespace ns3;
 class TopologyBuilder{
 
 public:
-
+  inline static std::vector<Ptr<ns3::Ipv4RlRouting>> leaf_rl_routers = {};
   inline static void InitRLRouting(const NodeContainer& leaf){
     std::cout<<"InitRouting"<<::std::endl;
     for(uint32_t curr_index = 0; curr_index < leaf.GetN() ; curr_index++){
@@ -32,7 +32,12 @@ public:
             std::cout<<"Casting problem <<"<<curr_index+1<<::std::endl;
             exit (1);
           }
+        leaf_rl_routers.push_back (tmp21);
         tmp21->init_routes(ipv4, tmp22->GetHostRoutes(), tmp22->GetNetworkRoutes(), Globals::action_space);
+        // TODO change it later
+        std::vector<float> initial_probs = {0.5, 0.5};// here we are only using two nodes, this is to be changed later, TODO use number of spines
+        tmp21->SetDistribution (initial_probs);
+
       }
 
 
