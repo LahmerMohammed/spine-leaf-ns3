@@ -52,7 +52,7 @@ ns3::Ptr<ns3::Ipv4Route>
 ns3::Ipv4RlRouting::RouteOutput (ns3::Ptr<ns3::Packet> p, const ns3::Ipv4Header &header,
                                  ns3::Ptr<ns3::NetDevice> oif, ns3::Socket::SocketErrno &sockerr)
 {
-  std::cout<<"==========================================RouteOutput()"<<this->m_ipv4<<std::endl;
+  std::cout<<"==========================================RouteOutput(NotEmplementedYet)"<<this->m_ipv4<<std::endl;
 
   return {};
 }
@@ -72,6 +72,21 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
+  Ptr<Packet> packet = ConstCast<Packet> (p);
+
+  Ipv4Address destAddress = header.GetDestination();
+
+  if (destAddress.IsMulticast() || destAddress.IsBroadcast()) {
+      NS_LOG_ERROR (this << " Drill routing only supports unicast");
+      ecb (packet, header, Socket::ERROR_NOROUTETOHOST);
+      return false;
+  }
+
+  if (!m_ipv4->IsForwarding (iif)) {
+      NS_LOG_ERROR (this << " Forwarding disabled for this interface");
+      ecb (packet, header, Socket::ERROR_NOROUTETOHOST);
+      return false;
+    }
 
   if (m_ipv4->IsDestinationAddress (header.GetDestination (), iif))
     {
@@ -83,36 +98,24 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
         }
       else
         {
-          // The local delivery callback is null.  This may be a multicast
-          // or broadcast packet, so return false so that another
-          // multicast routing protocol can handle it.  It should be possible
-          // to extend this to explicitly check whether it is a unicast
-          // packet, and invoke the error callback if so
           return false;
         }
     }
 
-  // Check if input device supports IP forwarding
-  if (!m_ipv4->IsForwarding (iif))
-    {
-      NS_LOG_LOGIC ("Forwarding disabled for this interface");
-      ecb (p, header, Socket::ERROR_NOROUTETOHOST);
-      return true;
-    }
-  // Next, try to find a route
+
   NS_LOG_LOGIC ("Unicast destination- looking up global route");
-  Ptr<Ipv4Route> rtentry = LookupGlobal (header.GetDestination ());
-  if (rtentry != 0)
+  std::vector<Ptr<Ipv4Route>> candidates = Lookup(header.GetDestination ());
+  std::cout<<"Condidates: "<<candidates.size()<<std::endl;
+  if (!candidates.empty())
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
-      ucb (rtentry, p, header);
+      ucb (candidates[0], p, header);
       return true;
     }
   else
     {
       NS_LOG_LOGIC ("Did not find unicast destination- returning false");
       return false; // Let other routing protocols try to handle this
-          // route request.
     }
   return false;
 }
@@ -198,12 +201,13 @@ ns3::Ipv4RlRouting::init_routes (Ptr<Ipv4> ipv4,const Ipv4GlobalRouting::HostRou
 }
 
 
-ns3::Ptr<ns3::Ipv4Route>
-ns3::Ipv4RlRouting::LookupGlobal (ns3::Ipv4Address dest, ns3::Ptr<ns3::NetDevice> oif)
+std::vector<ns3::Ptr<ns3::Ipv4Route>>
+ns3::Ipv4RlRouting::Lookup (ns3::Ipv4Address dest, const ns3::Ptr<ns3::NetDevice>& oif)
 {
   NS_LOG_FUNCTION (this << dest << oif);
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
   Ptr<Ipv4Route> rtentry = 0;
+  std::vector<Ptr<Ipv4Route>> ret;
   // store all available routes that bring packets to their destination
   typedef std::vector<Ipv4RoutingTableEntry*> RouteVec_t;
   RouteVec_t allRoutes;
@@ -252,35 +256,22 @@ ns3::Ipv4RlRouting::LookupGlobal (ns3::Ipv4Address dest, ns3::Ptr<ns3::NetDevice
             }
         }
     }
-  if (allRoutes.size () > 0 ) // if route(s) is found
-    {
-      std::cout<<"Found routes: "<<allRoutes.size()<<std::endl;
-      // pick up one of the routes uniformly at random if random
-      // ECMP routing is enabled, or always select the first route
-      // consistently if random ECMP routing is disabled
-      uint32_t selectIndex;
-      //if (m_randomEcmpRouting)
-       // {
-       //   selectIndex = m_rand->GetInteger (0, allRoutes.size ()-1);
-       // }
-      //else
-       // {
-          selectIndex = 0;
-       // }
-      Ipv4RoutingTableEntry* route = allRoutes.at (selectIndex);
-      // create a Ipv4Route object from the selected routing table entry
-      rtentry = Create<Ipv4Route> ();
-      rtentry->SetDestination (route->GetDest ());
-      /// \todo handle multi-address case
-      rtentry->SetSource (m_ipv4->GetAddress (route->GetInterface (), 0).GetLocal ());
-      rtentry->SetGateway (route->GetGateway ());
-      uint32_t interfaceIdx = route->GetInterface ();
-      rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
-      return rtentry;
+
+    for (const auto &item : allRoutes){
+        Ipv4RoutingTableEntry* route = item;
+        // create a Ipv4Route object from the selected routing table entry
+        rtentry = Create<Ipv4Route> ();
+        rtentry->SetDestination (route->GetDest ());
+        /// \todo handle multi-address case
+        rtentry->SetSource (m_ipv4->GetAddress (route->GetInterface (), 0).GetLocal ());
+        rtentry->SetGateway (route->GetGateway ());
+        uint32_t interfaceIdx = route->GetInterface ();
+        rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
+        ret.push_back (rtentry);
+
     }
-  else
-    {
-      std::cout<<"Found no routes"<<std::endl;
-      return nullptr;
-    }
+
+
+
+    return ret;
 }

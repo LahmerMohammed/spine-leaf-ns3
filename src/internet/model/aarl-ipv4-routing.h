@@ -56,7 +56,7 @@ private:
   Ipv4GlobalRouting::NetworkRoutes m_networkRoutes;       //!< Routes to networks
 
 
-  Ptr<Ipv4Route> LookupGlobal (Ipv4Address dest, Ptr<NetDevice> oif = 0);
+  std::vector<Ptr<Ipv4Route>> Lookup (Ipv4Address dest, const Ptr<NetDevice>& oif = nullptr);
 };
 
 }
