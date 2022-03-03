@@ -108,7 +108,7 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
 
   NS_LOG_LOGIC ("Unicast destination- looking up global route");
   std::vector<Ptr<Ipv4Route>> candidates = Lookup(header.GetDestination ());
-  std::cout<<"Condidates: "<<candidates.size()<<std::endl;
+  //std::cout<<"Condidates: "<<candidates.size()<<std::endl;
 
   if (candidates.size() == 1)
     {
@@ -119,7 +119,11 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
   else if (candidates.size()>1)
   {
       NS_ASSERT (candidates.size() == m_distribution.probabilities().size());
-      std::cout<<"Found multiple routes"<<std::endl;
+      //std::cout<<"Found multiple routes"<<std::endl;
+
+      auto index = m_distribution(m_generator);
+
+      ucb (candidates[index], p, header);
       /*
       auto tmp1 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[0]->GetOutputDevice())->GetChannel());
       auto tmp2 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[1]->GetOutputDevice())->GetChannel());

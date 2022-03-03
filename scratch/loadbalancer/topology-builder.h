@@ -196,7 +196,7 @@ public:
   }
   inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
-    std::uniform_int_distribution<uint64_t> distribution(100000,1000000);
+    std::uniform_int_distribution<uint64_t> distribution(10000000,100000000);
     std::vector<std::vector<uint64_t>> mat(servers_count, std::vector<uint64_t>(servers_count, 0));
     for (uint32_t i = 0; i < servers_count; ++i)
       {

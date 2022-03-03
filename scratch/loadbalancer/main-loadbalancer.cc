@@ -7,8 +7,8 @@ using namespace ns3;
 int
 main(int argc , char* argv[])
 {
-  //LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
-  //LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
+  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
   CommandLine cmd;
   cmd.AddValue ("openGymPort", "Port number for OpenGym env. Default: 5555", Globals::openGymPort);
   cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", Globals::simSeed);
@@ -46,12 +46,12 @@ main(int argc , char* argv[])
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
   //TopologyBuilder::animation (spine, leaf, servers);
 
-  /*
+
 
   FlowMonitorHelper flowHelper;
   Ptr<FlowMonitor> flowMonitor;
   flowMonitor = flowHelper.InstallAll();
-  */
+
 
   /// OPENGYM
 
@@ -65,8 +65,8 @@ main(int argc , char* argv[])
 
   Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
-  //TopologyBuilder::process_stats(flowMonitor, flowHelper);
-  //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
+  TopologyBuilder::process_stats(flowMonitor, flowHelper);
+  flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
   //openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
