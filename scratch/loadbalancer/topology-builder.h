@@ -196,7 +196,7 @@ public:
   }
   inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
-    std::uniform_int_distribution<uint64_t> distribution(10000000,100000000);
+    std::uniform_int_distribution<uint64_t> distribution(100000,1000000);
     std::vector<std::vector<uint64_t>> mat(servers_count, std::vector<uint64_t>(servers_count, 0));
     for (uint32_t i = 0; i < servers_count; ++i)
       {
@@ -373,14 +373,15 @@ public:
     uint16_t nodes_counter = 0;
     double x = 15.0 , y = 8.0;
     for(uint32_t i = 0 ; i < spine.GetN() ; i++)
-      {
+    {
         Ptr<ConstantPositionMobilityModel> n1 = spine.Get(i)->GetObject<ConstantPositionMobilityModel>();
         n1->SetPosition(Vector(x, y, 0));
         x+=20.0;
         anim.UpdateNodeDescription(nodes_counter, "router-layer2-" + std::to_string(i));
         nodes_counter++;
 
-      }
+    }
+
 
 
     x = 7.0;
@@ -394,6 +395,8 @@ public:
         nodes_counter++;
       }
 
+
+
     x = 7.0;
     y = 36.0;
     for(uint32_t i = 0 ; i < servers.GetN() ; i++)
@@ -406,6 +409,7 @@ public:
       }
 
   }
+
 
 };
 

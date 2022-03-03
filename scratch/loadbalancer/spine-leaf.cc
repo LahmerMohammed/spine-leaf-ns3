@@ -2,6 +2,7 @@
 #include <random>
 #include "spine-leaf.h"
 #include "globals.h"
+#include "topology-builder.h"
 vec_stats_t StateActionManager::m_q_drops_spines = std::vector(Globals::spineCount,std::vector<uint32_t>(Globals::leafCount));
 vec_stats_t StateActionManager::m_q_drops_leaves = std::vector(Globals::leafCount,std::vector<uint32_t>(Globals::spineCount));
 
@@ -73,11 +74,26 @@ StateActionManager::GetData()
     //return m_data;
 
 }
-
+void
+StateActionManager::ApplyNewAction (std::vector<float> actions)
+{
+  NS_ASSERT (actions.size() % Globals::action_space == 0);
+  NS_ASSERT (actions.size() / Globals::action_space == Globals::leafCount);
+  uint32_t next_elm = 0;
+  uint32_t next_rl_router = 0;
+  for (; actions.empty(); )
+    {
+      std::vector<float> tmp(Globals::action_space);
+      for (uint32_t i = 0; i < Globals::action_space ; ++i)
+      {
+        tmp.push_back (actions[next_elm++]);
+      }
+      TopologyBuilder::leaf_rl_routers[next_rl_router++]->SetDistribution (tmp);
+  }
+}
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("SpineAndLeaf");
 
 
 

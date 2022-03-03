@@ -6,6 +6,7 @@
 #include "ns3/log.h"
 #include <iostream>
 #include "globals.h"
+#include "spine-leaf.h"
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("DataCenterEnv");
@@ -163,6 +164,8 @@ bool
 DataCenterEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
   Ptr<OpenGymBoxContainer<float> > box = DynamicCast<OpenGymBoxContainer<float> >(action);//dict->Get("actions"));
+  NS_ASSERT (box != nullptr);
+  StateActionManager::ApplyNewAction (box->GetData());
   NS_LOG_UNCOND ("MyExecuteActions: " << action);
   NS_LOG_UNCOND ("---" << box);
   return true;

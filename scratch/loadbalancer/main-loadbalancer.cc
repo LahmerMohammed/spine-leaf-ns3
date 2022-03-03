@@ -7,8 +7,8 @@ using namespace ns3;
 int
 main(int argc , char* argv[])
 {
-  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
-  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
   CommandLine cmd;
   cmd.AddValue ("openGymPort", "Port number for OpenGym env. Default: 5555", Globals::openGymPort);
   cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", Globals::simSeed);
@@ -44,30 +44,31 @@ main(int argc , char* argv[])
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
+
+
+
+  //FlowMonitorHelper flowHelper;
+  //Ptr<FlowMonitor> flowMonitor;
+  //flowMonitor = flowHelper.InstallAll();
+
   //TopologyBuilder::animation (spine, leaf, servers);
-
-
-
-  FlowMonitorHelper flowHelper;
-  Ptr<FlowMonitor> flowMonitor;
-  flowMonitor = flowHelper.InstallAll();
-
 
   /// OPENGYM
 
 
-    /*
+
   // OpenGym Env
   Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
   Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
   myGymEnv->SetOpenGymInterface(openGymInterface);
-    */
+
 
   Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
-  TopologyBuilder::process_stats(flowMonitor, flowHelper);
-  flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
-  //openGymInterface->NotifySimulationEnd();
+
+  //TopologyBuilder::process_stats(flowMonitor, flowHelper);
+  //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
+  openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
   return 0;
