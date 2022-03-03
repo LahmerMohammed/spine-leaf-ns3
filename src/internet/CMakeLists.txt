@@ -343,5 +343,6 @@ build_lib(
     ${libcore}
     ${libbridge}
     ${libtraffic-control}
+    ${point-to-point}
   TEST_SOURCES ${test_sources}
 )

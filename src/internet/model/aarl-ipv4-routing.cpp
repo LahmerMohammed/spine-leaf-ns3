@@ -8,6 +8,7 @@
 #include "ns3/core-module.h"
 #include "ipv4-list-routing.h"
 #include "ipv4-routing-table-entry.h"
+#include "ns3/point-to-point-module.h"
 NS_LOG_COMPONENT_DEFINE ("Ipv4RlRouting");
 
 
@@ -107,7 +108,18 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
 
   NS_LOG_LOGIC ("Unicast destination- looking up global route");
   std::vector<Ptr<Ipv4Route>> candidates = Lookup(header.GetDestination ());
-  std::cout<<"Condidates: "<<candidates.size()<<std::endl;
+  //std::cout<<"Condidates: "<<candidates.size()<<std::endl;
+  /*
+  if (candidates.size() >= 2){
+
+      auto tmp1 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[0]->GetOutputDevice())->GetChannel());
+      auto tmp2 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[1]->GetOutputDevice())->GetChannel());
+      std::cout<<"Node id: "<<candidates[0]->GetOutputDevice()->GetNode()->GetId()<<std::endl;
+      std::cout<<"\tid1: "<<tmp1->GetDevice (1)->GetNode()->GetId()<<std::endl;
+      std::cout<<"\tid2: "<<tmp2->GetDevice (1)->GetNode()->GetId()<<std::endl;
+
+  }
+   */
   if (!candidates.empty())
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
