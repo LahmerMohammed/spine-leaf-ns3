@@ -10,6 +10,8 @@
 #include "ns3/packet.h"
 #include "ns3/ipv4-header.h"
 #include "ns3/ipv4-address.h"
+#include "ipv4-global-routing.h"
+#include "ns3/ipv4-routing-protocol.h"
 
 namespace ns3{
 struct DrillRouteEntry {
@@ -18,7 +20,10 @@ struct DrillRouteEntry {
   uint32_t port;
 };
 
+
+
 class Ipv4RlRouting : public Ipv4RoutingProtocol {
+
 
 public:
   Ipv4RlRouting ();
@@ -27,11 +32,6 @@ public:
   static TypeId GetTypeId (void);
 
   void AddRoute (Ipv4Address network, Ipv4Mask networkMask, uint32_t port);
-  std::vector<DrillRouteEntry> LookupDrillRouteEntries (Ipv4Address dest);
-
-  uint32_t CalculateQueueLength (uint32_t interface);
-  Ptr<Ipv4Route> ConstructIpv4Route (uint32_t port, Ipv4Address destAddress);
-
 
   /* Inherit From Ipv4RoutingProtocol */
   virtual Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr);
@@ -47,12 +47,16 @@ public:
 
   virtual void DoDispose (void);
 
+  void init_routes(Ptr<Ipv4> ipv4, const Ipv4GlobalRouting::HostRoutes&, const Ipv4GlobalRouting::NetworkRoutes&);
+
 private:
   uint32_t m_d;
-  std::map<Ipv4Address, uint32_t> m_previousBestQueueMap;
-
   Ptr<Ipv4> m_ipv4;
-  std::vector<DrillRouteEntry> m_routeEntryList;
+  Ipv4GlobalRouting::HostRoutes m_hostRoutes;             //!< Routes to hosts
+  Ipv4GlobalRouting::NetworkRoutes m_networkRoutes;       //!< Routes to networks
+
+
+  Ptr<Ipv4Route> LookupGlobal (Ipv4Address dest, Ptr<NetDevice> oif = 0);
 };
 
 }

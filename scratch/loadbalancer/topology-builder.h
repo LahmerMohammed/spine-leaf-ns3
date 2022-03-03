@@ -7,11 +7,37 @@
 #include <random>
 #include "spine-leaf.h"
 #include "globals.h"
+#include "ns3/internet-module.h"
 using namespace ns3;
 
 class TopologyBuilder{
 
 public:
+
+  inline static void InitRLRouting(const NodeContainer& leaf){
+    std::cout<<"InitRouting"<<::std::endl;
+    for(uint32_t curr_index = 0; curr_index < leaf.GetN() ; curr_index++){
+
+        auto ipv4 = leaf.Get (curr_index)->GetObject<Ipv4> ();
+        auto tmp = ipv4->GetRoutingProtocol();
+        auto tmp2 = DynamicCast<Ipv4ListRouting>(tmp);
+        int16_t priority;
+        auto rl_routing = tmp2->GetRoutingProtocol (0, priority);
+        auto global_routing = tmp2->GetRoutingProtocol (2, priority);
+        auto tmp22 = DynamicCast<ns3::Ipv4GlobalRouting> (global_routing);
+        auto tmp21 = DynamicCast<ns3::Ipv4RlRouting> (rl_routing);
+        if (tmp22 and tmp21)
+          std::cout<<"Init RL Router: <<"<<curr_index+1<<::std::endl;
+        else{
+            std::cout<<"Casting problem <<"<<curr_index+1<<::std::endl;
+            exit (1);
+          }
+        tmp21->init_routes(ipv4, tmp22->GetHostRoutes(), tmp22->GetNetworkRoutes());
+      }
+
+
+  }
+
   inline static std::tuple<NodeContainer,NodeContainer,NodeContainer>
   BuildTopology(uint32_t spine_count, uint32_t leaf_count, uint32_t servers_count)
   {

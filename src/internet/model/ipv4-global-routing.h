@@ -227,18 +227,6 @@ public:
    * \return the number of stream indices assigned by this model
    */
   int64_t AssignStreams (int64_t stream);
-
-protected:
-  void DoDispose (void);
-
-private:
-  /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
-  bool m_randomEcmpRouting;
-  /// Set to true if this interface should respond to interface events by globallly recomputing routes 
-  bool m_respondToInterfaceEvents;
-  /// A uniform random number generator for randomly routing packets among ECMP 
-  Ptr<UniformRandomVariable> m_rand;
-
   /// container of Ipv4RoutingTableEntry (routes to hosts)
   typedef std::list<Ipv4RoutingTableEntry *> HostRoutes;
   /// const iterator of container of Ipv4RoutingTableEntry (routes to hosts)
@@ -259,6 +247,25 @@ private:
   typedef std::list<Ipv4RoutingTableEntry *>::const_iterator ASExternalRoutesCI;
   /// iterator of container of Ipv4RoutingTableEntry (routes to external AS)
   typedef std::list<Ipv4RoutingTableEntry *>::iterator ASExternalRoutesI;
+
+  inline HostRoutes GetHostRoutes(){
+    return m_hostRoutes;
+  }
+  inline NetworkRoutes GetNetworkRoutes(){
+    return m_networkRoutes;
+  }
+protected:
+  void DoDispose (void);
+
+private:
+  /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
+  bool m_randomEcmpRouting;
+  /// Set to true if this interface should respond to interface events by globallly recomputing routes 
+  bool m_respondToInterfaceEvents;
+  /// A uniform random number generator for randomly routing packets among ECMP 
+  Ptr<UniformRandomVariable> m_rand;
+
+
 
   /**
    * \brief Lookup in the forwarding table for destination.
