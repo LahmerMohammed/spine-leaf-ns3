@@ -32,7 +32,7 @@ public:
             std::cout<<"Casting problem <<"<<curr_index+1<<::std::endl;
             exit (1);
           }
-        tmp21->init_routes(ipv4, tmp22->GetHostRoutes(), tmp22->GetNetworkRoutes());
+        tmp21->init_routes(ipv4, tmp22->GetHostRoutes(), tmp22->GetNetworkRoutes(), Globals::action_space);
       }
 
 

@@ -7,17 +7,18 @@ using namespace ns3;
 int
 main(int argc , char* argv[])
 {
-
+  //LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
   CommandLine cmd;
   cmd.AddValue ("openGymPort", "Port number for OpenGym env. Default: 5555", Globals::openGymPort);
   cmd.AddValue ("simSeed", "Seed for random generator. Default: 1", Globals::simSeed);
   cmd.AddValue ("simTime", "Simulation time in seconds. Default: 10s", Globals::simulationTime);
   cmd.AddValue ("stepTime", "Gym Env step time in seconds. Default: 0.1s", Globals::envStepTime);
-
-  cmd.AddValue ("serverCount", "Extra simulation argument. Default: 0", Globals::serverCount);
-  cmd.AddValue ("leafCount", "Extra simulation argument. Default: 0", Globals::leafCount);
-  cmd.AddValue ("spineCount", "Extra simulation argument. Default: 0", Globals::spineCount);
-
+  cmd.AddValue ("action space", "Extra simulation argument. Default: 4", Globals::action_space);
+  cmd.AddValue ("serverCount", "Extra simulation argument. Default: 1", Globals::serverCount);
+  cmd.AddValue ("leafCount", "Extra simulation argument. Default: 4", Globals::leafCount);
+  cmd.AddValue ("spineCount", "Extra simulation argument. Default: 2", Globals::spineCount);
+  Globals::action_space = Globals::spineCount;
   cmd.Parse (argc, argv);
 
   RngSeedManager::SetSeed (1);

@@ -3,6 +3,7 @@
 //
 
 #include <iomanip>
+#include <random>
 #include "aarl-ipv4-routing.h"
 #include "ns3/core-module.h"
 #include "ipv4-list-routing.h"
@@ -13,6 +14,7 @@ NS_LOG_COMPONENT_DEFINE ("Ipv4RlRouting");
 ns3::Ipv4RlRouting::Ipv4RlRouting ()
 {
   //std::cout<<"==========================================Ipv4RlRouting()"<<this->m_ipv4<<std::endl;
+  m_generator.seed(std::random_device()());
 
 }
 
@@ -175,7 +177,7 @@ ns3::Ipv4RlRouting::DoDispose (void)
 }
 
 void
-ns3::Ipv4RlRouting::init_routes (Ptr<Ipv4> ipv4,const Ipv4GlobalRouting::HostRoutes& host_routes, const Ipv4GlobalRouting::NetworkRoutes& network_routes)
+ns3::Ipv4RlRouting::init_routes (const Ptr<Ipv4>& ipv4,const Ipv4GlobalRouting::HostRoutes& host_routes, const Ipv4GlobalRouting::NetworkRoutes& network_routes, uint32_t action_space)
 {
   m_ipv4 = ipv4;
   for (auto host_route : host_routes)

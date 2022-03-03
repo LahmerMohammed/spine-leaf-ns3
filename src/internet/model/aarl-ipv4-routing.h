@@ -4,6 +4,7 @@
 
 #ifndef NS3_AARLIPV4ROUTING_H
 #define NS3_AARLIPV4ROUTING_H
+#include <memory>
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/ipv4-route.h"
 #include "ns3/object.h"
@@ -12,7 +13,9 @@
 #include "ns3/ipv4-address.h"
 #include "ipv4-global-routing.h"
 #include "ns3/ipv4-routing-protocol.h"
-
+#include <iostream>
+#include <random>
+using namespace std;
 namespace ns3{
 struct DrillRouteEntry {
   Ipv4Address network;
@@ -47,13 +50,21 @@ public:
 
   virtual void DoDispose (void);
 
-  void init_routes(Ptr<Ipv4> ipv4, const Ipv4GlobalRouting::HostRoutes&, const Ipv4GlobalRouting::NetworkRoutes&);
+  void init_routes(const Ptr<Ipv4>& ipv4, const Ipv4GlobalRouting::HostRoutes&, const Ipv4GlobalRouting::NetworkRoutes&, uint32_t );
 
+  inline bool SetDistribution(const std::vector<float>& dist){
+    m_distribution = std::discrete_distribution<int>(dist.begin(), dist.end());
+    m_distribution.probabilities();
+    return true;
+  }
 private:
   uint32_t m_d;
   Ptr<Ipv4> m_ipv4;
   Ipv4GlobalRouting::HostRoutes m_hostRoutes;             //!< Routes to hosts
   Ipv4GlobalRouting::NetworkRoutes m_networkRoutes;       //!< Routes to networks
+
+  std::discrete_distribution<int> m_distribution;
+  std::mt19937 m_generator;
 
 
   std::vector<Ptr<Ipv4Route>> Lookup (Ipv4Address dest, const Ptr<NetDevice>& oif = nullptr);
