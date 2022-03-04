@@ -42,7 +42,7 @@ main(int argc , char* argv[])
   TopologyBuilder::InitRLRouting (leaf);
   //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
-  //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&Func));
+  Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&StateActionManager::TraceP2PDevQueueDrop));
   //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
 
 
@@ -58,9 +58,9 @@ main(int argc , char* argv[])
 
 
   // OpenGym Env
-  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
-  Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
-  myGymEnv->SetOpenGymInterface(openGymInterface);
+  //Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
+  //Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
+  //myGymEnv->SetOpenGymInterface(openGymInterface);
 
 
   Simulator::Stop(Seconds(Globals::simulationTime));
@@ -68,7 +68,7 @@ main(int argc , char* argv[])
 
   //TopologyBuilder::process_stats(flowMonitor, flowHelper);
   //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
-  openGymInterface->NotifySimulationEnd();
+  //openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
   return 0;

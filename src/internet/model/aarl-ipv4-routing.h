@@ -13,15 +13,77 @@
 #include "ns3/ipv4-address.h"
 #include "ipv4-global-routing.h"
 #include "ns3/ipv4-routing-protocol.h"
+#include "ns3/uinteger.h"
 #include <iostream>
 #include <random>
 using namespace std;
 namespace ns3{
-struct DrillRouteEntry {
-  Ipv4Address network;
-  Ipv4Mask networkMask;
-  uint32_t port;
+
+class MyTag : public Tag
+{
+public:
+  inline MyTag():
+        m_leaf_id(99999),
+        m_interface(99999)
+  {}
+  inline static TypeId GetTypeId (){
+    static TypeId tid = TypeId ("ns3::MyTag")
+                            .SetParent<Tag> ()
+                            .AddConstructor<MyTag> ()
+                            .AddAttribute ("LeafId",
+                                           "Identify the first leaf router id",
+                                           EmptyAttributeValue (),
+                                           MakeUintegerAccessor (&MyTag::GetLeafId),
+                                           MakeUintegerChecker<uint32_t> ())
+                            .AddAttribute ("InterfaceId",
+                                           "Identify the interface id in the leaf switch",
+                                           EmptyAttributeValue (),
+                                           MakeUintegerAccessor (&MyTag::GetInterfaceId),
+                                           MakeUintegerChecker<uint32_t> ())
+        ;
+    return tid;
+  }
+  inline virtual TypeId GetInstanceTypeId () const{
+    return GetTypeId ();
+  }
+  inline virtual uint32_t GetSerializedSize () const{
+    return sizeof (uint32_t)*2;
+  }
+  inline virtual void Serialize (TagBuffer i) const{
+    i.WriteU32(m_leaf_id);
+    i.WriteU32(m_interface);
+
+  }
+  inline virtual void Deserialize (TagBuffer i){
+    m_leaf_id = i.ReadU32();
+    m_interface = i.ReadU32 ();
+  }
+  inline virtual void Print (std::ostream &os) const{
+    os << "leaf-id=" << (uint32_t)m_leaf_id<<"/interface-id="<<m_interface<<std::endl;
+  };
+
+  void SetLeafId (uint32_t id){
+    m_leaf_id = id;
+  }
+
+  [[nodiscard]] uint32_t GetLeafId () const{
+    return m_leaf_id;
+  }
+  void SetInterfaceId(uint32_t id){
+
+    m_interface = id;
+  }
+  [[nodiscard]] uint32_t GetInterfaceId() const{
+    return m_interface;
+  }
+
+private:
+  uint32_t m_leaf_id;
+  uint32_t m_interface;
 };
+
+
+
 
 
 

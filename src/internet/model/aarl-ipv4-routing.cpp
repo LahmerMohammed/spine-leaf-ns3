@@ -122,8 +122,16 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
       //std::cout<<"Found multiple routes"<<std::endl;
 
       auto index = m_distribution(m_generator);
-
-      ucb (candidates[index], p, header);
+      MyTag tmp;
+      auto outputRoute = candidates[index];
+      tmp.SetInterfaceId (outputRoute->GetOutputDevice()->GetIfIndex());
+      tmp.SetLeafId(outputRoute->GetOutputDevice()->GetNode()->GetId());
+      p->AddPacketTag(tmp);
+      ucb (outputRoute, p, header);
+      MyTag tagCopy;
+      p->PeekPacketTag (tagCopy);
+      //p->PrintPacketTags (std::cout);
+      //std::cout<<std::endl;
       /*
       auto tmp1 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[0]->GetOutputDevice())->GetChannel());
       auto tmp2 = DynamicCast<PointToPointChannel>(DynamicCast<PointToPointNetDevice>(candidates[1]->GetOutputDevice())->GetChannel());

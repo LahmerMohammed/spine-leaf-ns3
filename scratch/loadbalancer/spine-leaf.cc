@@ -18,9 +18,9 @@ StateActionManager::GetData()
         for (uint32_t j = 0; j < Globals::leafCount; ++j)
           {
             m_q_drops_spines[i][j] = p2pSpinesLeavesNetdevs[i][j]->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
+
             //auto tmp = p2pSpinesLeavesNetdevs[i][j]->time_slot();
             //m_bandwidths_spines[i][j] = tmp.first ;//* tmp.second.GetBitRate();
-
           }
       }
     else{

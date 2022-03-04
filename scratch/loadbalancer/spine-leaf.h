@@ -19,6 +19,7 @@
 #include "ns3/packet-socket.h"
 #include "vector"
 #include "tuple"
+#include "ns3/aarl-ipv4-routing.h"
 #define NANO_TO_SEC(a) a / 1000000000.0
 #define MICRO_TO_SEC(a) a / 1000000.0
 #define MILI_TO_SEC(a) a / 1000.0
@@ -26,7 +27,7 @@
 #define SIMULATION_DURATION 30.0
 
 #define SERVER_LEAF_DELAY MilliSeconds(1)
-#define SERVER_LEAF_DATA_RATE "1Gbps"
+#define SERVER_LEAF_DATA_RATE "1Mbps"
 #define LEAF_SPINE_DELAY MilliSeconds(1)
 #define LEAF_SPINE_DATA_RATE "1Gbps"
 #define PACKET_SIZE 1000
@@ -55,7 +56,16 @@ public:
     static void GetData();
     static void ApplyNewAction(std::vector<float>);
 
+    inline static void TraceP2PDevQueueDrop(std::string context, Ptr<const Packet> droppedPacket){
+        MyTag tagCopy;
+        droppedPacket->PeekPacketTag (tagCopy);
+        //droppedPacket->PrintPacketTags (std::cout);
+        if(tagCopy.GetLeafId() != 99999){
+            std::cout<<context<<std::endl;
+            tagCopy.Print(std::cout);
+        }
 
+    }
 
     static  vec_stats_t m_q_drops_leaves;
     static  vec_stats_t m_q_drops_spines;
