@@ -18,6 +18,14 @@ main(int argc , char* argv[])
   cmd.AddValue ("serverCount", "Extra simulation argument. Default: 1", Globals::serverCount);
   cmd.AddValue ("leafCount", "Extra simulation argument. Default: 4", Globals::leafCount);
   cmd.AddValue ("spineCount", "Extra simulation argument. Default: 2", Globals::spineCount);
+  std::cout<<"Configuration:"<<std::endl;
+  std::cout<<"openGymPort="<<Globals::openGymPort<<std::endl;
+  std::cout<<"simTime="<<Globals::simSeed<<std::endl;
+  std::cout<<"stepTime="<<Globals::envStepTime<<std::endl;
+  std::cout<<"serverCount="<<Globals::serverCount<<std::endl;
+  std::cout<<"leafCount="<<Globals::leafCount<<std::endl;
+  std::cout<<"spineCount="<<Globals::spineCount<<std::endl;
+
   Globals::action_space = Globals::spineCount;
   cmd.Parse (argc, argv);
 
@@ -28,7 +36,6 @@ main(int argc , char* argv[])
   NodeContainer spine,leaf,servers;
   std::tie(spine,leaf,servers) = TopologyBuilder::BuildTopology(Globals::spineCount, Globals::leafCount, Globals::serverCount);
 
-
   NodeContainer udpClients , udpServers;
   for(uint32_t i = 0 ; i < Globals::serverCount*Globals::leafCount ; i++)
     {
@@ -37,19 +44,17 @@ main(int argc , char* argv[])
       else
         udpServers.Add(servers.Get(i));
     }
+  TopologyBuilder::poisson_traffic_generator(servers);
 
-  TopologyBuilder::generate_traffic(servers);
+  //TopologyBuilder::generate_traffic(servers);
   TopologyBuilder::InitRLRouting (leaf);
-  //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
-  //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
-  Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&StateActionManager::TraceP2PDevQueueDrop));
-  //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Enqueue", MakeCallback(&Func));
+  //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&StateActionManager::TraceP2PDevQueueDrop));
 
 
 
-  //FlowMonitorHelper flowHelper;
-  //Ptr<FlowMonitor> flowMonitor;
-  //flowMonitor = flowHelper.InstallAll();
+  FlowMonitorHelper flowHelper;
+  Ptr<FlowMonitor> flowMonitor;
+  flowMonitor = flowHelper.InstallAll();
 
   //TopologyBuilder::animation (spine, leaf, servers);
 
@@ -58,17 +63,19 @@ main(int argc , char* argv[])
 
 
   // OpenGym Env
-  //Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
-  //Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
-  //myGymEnv->SetOpenGymInterface(openGymInterface);
 
+  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
+  Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
+  myGymEnv->SetOpenGymInterface(openGymInterface);
 
+  //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
+  StateActionManager::init ();
   Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
 
   //TopologyBuilder::process_stats(flowMonitor, flowHelper);
   //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
-  //openGymInterface->NotifySimulationEnd();
+  openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
   return 0;

@@ -20,32 +20,30 @@
 #include "vector"
 #include "tuple"
 #include "ns3/aarl-ipv4-routing.h"
+#include "globals.h"
 #define NANO_TO_SEC(a) a / 1000000000.0
 #define MICRO_TO_SEC(a) a / 1000000.0
 #define MILI_TO_SEC(a) a / 1000.0
-
 #define SIMULATION_DURATION 30.0
-
 #define SERVER_LEAF_DELAY MilliSeconds(1)
-#define SERVER_LEAF_DATA_RATE "1Mbps"
+#define SERVER_LEAF_DATA_RATE "100Mbps"
 #define LEAF_SPINE_DELAY MilliSeconds(1)
-#define LEAF_SPINE_DATA_RATE "1Gbps"
+#define LEAF_SPINE_DATA_RATE "100Mbps"
 #define PACKET_SIZE 1000
 #define INTERVAL MilliSeconds(1)
 #define MAX_PACKETS 3000
-
 #define UDP_SERVER_PORT 3000
 
 #define BASE_NETWORK "192.168.0.0"
 #define BASE_NETWORK_MASK "255.255.255.0"
 
 
-static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pSpinesLeavesNetdevs;
-static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pLeavesSpinesNetdevs;
+
 
 
 typedef std::vector<std::vector<uint32_t>> vec_stats_t;
-typedef std::vector<std::vector<long double>> vec_stats64_t;
+typedef std::vector<std::vector<long double>> vec_statsd64_t;
+typedef std::vector<std::vector<uint64_t>> vec_statsu64_t;
 
 
 using namespace ns3;
@@ -61,8 +59,22 @@ public:
         droppedPacket->PeekPacketTag (tagCopy);
         //droppedPacket->PrintPacketTags (std::cout);
         if(tagCopy.GetLeafId() != 99999){
-            std::cout<<context<<std::endl;
-            tagCopy.Print(std::cout);
+            Ptr<Packet> copy = droppedPacket->Copy();
+
+            // Headers must be removed in the order they're present.
+            PppHeader pppHeader;
+            copy->RemoveHeader(pppHeader);
+            Ipv4Header ipHeader;
+            copy->RemoveHeader(ipHeader);
+            //std::cout<<context<<std::endl;
+            //std::cout << "\tsrc="<<ipHeader.GetSource()<<" dst="<<ipHeader.GetDestination()<<std::endl;
+            //tagCopy.Print(std::cout<<"\t");
+            uint32_t i = tagCopy.GetInterfaceId()-1;
+            uint32_t j = tagCopy.GetLeafId()-Globals::spineCount;
+            //std::cout<<"("<<i<<","<<j<<")"<<std::endl;
+            //std::cout<<"\t("<<StateActionManager::m_path_drops.size()<<","<<StateActionManager::m_path_drops[0].size()<<")"<<std::endl;
+
+            StateActionManager::m_path_drops[i][j]++;
         }
 
     }
@@ -70,15 +82,17 @@ public:
     static  vec_stats_t m_q_drops_leaves;
     static  vec_stats_t m_q_drops_spines;
 
-    static  vec_stats64_t m_bandwidths_spines;
-    static  vec_stats64_t m_bandwidths_leaves;
+    static  vec_statsd64_t m_bandwidths_spines;
+    static  vec_statsd64_t m_bandwidths_leaves;
+
+    static vec_statsu64_t m_q_size_spines;
+    static vec_statsu64_t m_q_size_leaves;
 
 
+    static vec_statsu64_t m_path_drops;
 
 
-private:
-
-
+    static void init();
 
 };
 

@@ -7,8 +7,8 @@
 
 class Globals{
 public:
-  inline static uint32_t simulationTime = 10;
-  inline static uint32_t action_space = 4;
+  inline static uint32_t simulationTime = 30;
+  inline static uint32_t action_space = 2;
   inline static uint32_t openGymPort = 5555;
   inline static uint32_t simSeed = 1;
   inline static double envStepTime = 1.0;

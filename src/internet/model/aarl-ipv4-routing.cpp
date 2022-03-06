@@ -16,6 +16,9 @@ ns3::Ipv4RlRouting::Ipv4RlRouting ()
 {
   //std::cout<<"==========================================Ipv4RlRouting()"<<this->m_ipv4<<std::endl;
   m_generator.seed(std::random_device()());
+  m_distribution = {};
+  stats.push_back (0);
+  stats.push_back (0);
 
 }
 
@@ -118,18 +121,20 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
     }
   else if (candidates.size()>1)
   {
+      //std::cout<<"candidates="<<candidates.size()<<",pobabilities="<<m_distribution.probabilities().size()<<std::endl;
+
       NS_ASSERT (candidates.size() == m_distribution.probabilities().size());
-      //std::cout<<"Found multiple routes"<<std::endl;
 
       auto index = m_distribution(m_generator);
+      stats[index]++;
       MyTag tmp;
       auto outputRoute = candidates[index];
       tmp.SetInterfaceId (outputRoute->GetOutputDevice()->GetIfIndex());
       tmp.SetLeafId(outputRoute->GetOutputDevice()->GetNode()->GetId());
       p->AddPacketTag(tmp);
       ucb (outputRoute, p, header);
-      MyTag tagCopy;
-      p->PeekPacketTag (tagCopy);
+      //MyTag tagCopy;
+      //p->PeekPacketTag (tagCopy);
       //p->PrintPacketTags (std::cout);
       //std::cout<<std::endl;
       /*
@@ -158,6 +163,20 @@ ns3::Ipv4RlRouting::NotifyInterfaceUp (uint32_t interface)
 
 }
 
+
+bool ns3::Ipv4RlRouting::SetDistribution(const std::vector<float>& dist)
+{
+  //std::cout<<"SetDistribution("<<dist[0]<<","<<dist[1]<<")\n";
+  //std::cout<<"size("<<dist.size()<<")\n";
+
+  m_distribution = std::discrete_distribution<int>(dist.begin(), dist.end());
+  auto tmp = m_distribution.probabilities();
+
+  //std::cout<<"NewDist("<<tmp[0]<<","<<tmp[1]<<")\n";
+  //std::cout<<"NewSize("<<tmp.size()<<")\n";
+
+  return true;
+}
 
 void
 ns3::Ipv4RlRouting::NotifyInterfaceDown (uint32_t interface)

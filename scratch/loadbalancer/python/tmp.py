@@ -28,11 +28,11 @@ obs = env.reset()
 while True:
     stepIdx += 1
     action = env.action_space.sample()
-    for i in range(len(action)):
+    for i in range(2):
         if i % 2 == 0:
-            action[i] = 9
+            action[i] = 0.9
         else:
-            action[i] = 1
+            action[i] = 0.1
 
     print(action)
 

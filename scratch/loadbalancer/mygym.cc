@@ -16,7 +16,7 @@ NS_LOG_COMPONENT_DEFINE ("DataCenterEnv");
 DataCenterEnv::DataCenterEnv ()
 {
   NS_LOG_FUNCTION (this);
-  m_interval = Seconds(0.1);
+  m_interval = Seconds(Globals::envStepTime);
 
   Simulator::Schedule (Seconds(0.0), &DataCenterEnv::ScheduleNextStateRead, this);
 }
@@ -67,8 +67,8 @@ DataCenterEnv::GetObservationSpace()
 {
   //uint32_t nodeNum = 5;
   float low = 0.0;
-  float high = 10.0;
-  uint32_t size = Globals::spineCount*Globals::leafCount;
+  float high = 10000000.0;
+  uint32_t size = Globals::spineCount*Globals::leafCount*7;
   std::vector<uint32_t> shape = {size,};
   std::string dtype = TypeNameGet<float> ();
 
@@ -87,7 +87,7 @@ Ptr<OpenGymSpace>
 DataCenterEnv::GetActionSpace()
 {
   float low = 0.0;
-  float high = 1.0;
+  float high = 100.0;
   uint32_t size = Globals::spineCount*Globals::leafCount;
   std::vector<uint32_t> shape = {size,};
   std::string dtype = TypeNameGet<float> ();
@@ -122,21 +122,60 @@ Collect observations
 Ptr<OpenGymDataContainer>
 DataCenterEnv::GetObservation()
 {
-  uint32_t low = 0.0;
-  uint32_t high = 10.0;
+
   Ptr<UniformRandomVariable> rngInt = CreateObject<UniformRandomVariable> ();
-  uint32_t size = Globals::spineCount*Globals::leafCount;
+  uint32_t size = Globals::spineCount*Globals::leafCount*7;
   std::vector<uint32_t> shape = {size,};
   Ptr<OpenGymBoxContainer<float> > box = CreateObject<OpenGymBoxContainer<float> >(shape);
-
+  StateActionManager::GetData();
   // generate random data
-  for (uint32_t i = 0; i<size; i++){
-    float value = rngInt->GetValue(low, high);
-    box->AddValue(value);
-  }
+  std::vector<float> data;
+  auto drops_spine_leaf = StateActionManager::m_q_drops_spines;
+  for (const auto &item : drops_spine_leaf)
+    for (const auto &val : item){
+        box->AddValue(val);
+      }
+  auto drops_leaf_spine = StateActionManager::m_q_drops_leaves;
+  for (const auto &item : drops_leaf_spine)
+    for (const auto &val : item){
+        box->AddValue (val);
+      }
+
+  auto qsize_spine_leaf = StateActionManager::m_q_size_spines;
+  for (const auto &item : qsize_spine_leaf)
+    for (const auto &val : item){
+        box->AddValue(val);
+      }
+  auto qsize_leaf_spine = StateActionManager::m_q_size_leaves;
+  for (const auto &item : qsize_leaf_spine)
+    for (const auto &val : item){
+        box->AddValue (val);
+      }
+
+  auto bandiwth_spine_leaf = StateActionManager::m_bandwidths_spines;
+  for (const auto &item : bandiwth_spine_leaf)
+    for (const auto &val : item){
+        box->AddValue (val/8000);
+      }
+
+  auto bandiwth_leaf_spine = StateActionManager::m_bandwidths_leaves;
+  for (const auto &item : bandiwth_leaf_spine)
+    for (const auto &val : item){
+        box->AddValue (val/8000);
+      }
 
 
-  NS_LOG_UNCOND ("MyGetObservation: " << box);
+  auto path_links_drops = StateActionManager::m_path_drops;
+  //uint64_t z = 0;
+  for (auto &item : path_links_drops)
+    for (auto &val : item){
+        box->AddValue (val);
+        val = 0;
+        //z++;
+      }
+  //std::cout<<"Z="<<z<<std::endl;
+
+  //NS_LOG_UNCOND ("MyGetObservation: " << box);
 
   return box;
 }
@@ -156,7 +195,7 @@ DataCenterEnv::GetExtraInfo()
 {
   std::string myInfo = "testInfo";
   myInfo += "|123";
-  NS_LOG_UNCOND("MyGetExtraInfo: " << myInfo);
+  //NS_LOG_UNCOND("MyGetExtraInfo: " << myInfo);
   return myInfo;
 }
 
@@ -166,8 +205,8 @@ DataCenterEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
   Ptr<OpenGymBoxContainer<float> > box = DynamicCast<OpenGymBoxContainer<float> >(action);//dict->Get("actions"));
   NS_ASSERT (box != nullptr);
   StateActionManager::ApplyNewAction (box->GetData());
-  NS_LOG_UNCOND ("MyExecuteActions: " << action);
-  NS_LOG_UNCOND ("---" << box);
+  //NS_LOG_UNCOND ("MyExecuteActions: " << action);
+  //NS_LOG_UNCOND ("---" << box);
   return true;
 }
 

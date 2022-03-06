@@ -13,6 +13,9 @@ using namespace ns3;
 class TopologyBuilder{
 
 public:
+  inline static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pSpinesLeavesNetdevs = {};
+  inline static std::vector<std::vector<ns3::Ptr<ns3::PointToPointNetDevice>>> p2pLeavesSpinesNetdevs = {};
+
   inline static std::vector<Ptr<ns3::Ipv4RlRouting>> leaf_rl_routers = {};
   inline static void InitRLRouting(const NodeContainer& leaf){
     std::cout<<"InitRouting"<<::std::endl;
@@ -77,6 +80,45 @@ public:
     p2p.SetQueue("ns3::DropTailQueue" , "MaxSize" , QueueSizeValue (QueueSize ("1500p")));
 
 
+    p2p.SetChannelAttribute("Delay" , TimeValue(LEAF_SPINE_DELAY));
+    p2p.SetDeviceAttribute("DataRate" ,
+                            DataRateValue(DataRate(LEAF_SPINE_DATA_RATE)));
+
+    //NS_LOG_INFO("Creating P2P Connections between SPINE and LEAF");
+    NetDeviceContainer netDeviceContainer;
+
+    std::vector<NetDeviceContainer> leaf_spine_netDevContainer;
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> spines_leaves_netdevs(spine_count, std::vector<Ptr<PointToPointNetDevice>>(leaf_count, nullptr));
+    std::vector<std::vector<Ptr<PointToPointNetDevice>>> leaves_spines_netdevs(leaf_count, std::vector<Ptr<PointToPointNetDevice>>(spine_count, nullptr));
+
+    for(uint32_t i_spine = 0 ; i_spine < spine_count ; i_spine++)
+      {
+        std::vector<Ptr<PointToPointNetDevice>> tmp_spine_leaves;
+        std::vector<Ptr<PointToPointNetDevice>> tmp_leaves_spine;
+
+        for(uint32_t i_leaf = 0 ; i_leaf < leaf_count ; i_leaf++)
+          {
+            netDeviceContainer = p2p.Install(leaf.Get(i_leaf),
+                                              spine.Get(i_spine));
+
+            Ptr<PointToPointNetDevice> leaf_netDev = DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(0)) ;
+            Ptr<PointToPointNetDevice> spine_netDev =  DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(1));
+            tmp_spine_leaves.push_back (spine_netDev);
+            tmp_leaves_spine.push_back (leaf_netDev);
+            spines_leaves_netdevs[i_spine][i_leaf] = spine_netDev;
+            leaves_spines_netdevs[i_leaf][i_spine] = leaf_netDev;
+
+
+            leaf_spine_netDevContainer.push_back(netDeviceContainer);
+          }
+        p2pSpinesLeavesNetdevs.push_back (tmp_spine_leaves);
+        p2pLeavesSpinesNetdevs.push_back (tmp_leaves_spine);
+      }
+
+    //p2pNetDevices = leaf_spine_netDevContainer;
+    //p2pSpinesLeavesNetdevs = spines_leaves_netdevs;
+    //p2pLeavesSpinesNetdevs = leaves_spines_netdevs;
+
     //NS_LOG_INFO("Creating P2P Connections between SERVER and LEAF");
 
     p2p.SetChannelAttribute("Delay" , TimeValue(SERVER_LEAF_DELAY));
@@ -85,7 +127,6 @@ public:
 
 
 
-    NetDeviceContainer netDeviceContainer;
 
 
     //NS_LOG_INFO("Creating P2P Connections between Leaf and Servers");
@@ -106,37 +147,7 @@ public:
 
 
 
-    p2p.SetChannelAttribute("Delay" , TimeValue(LEAF_SPINE_DELAY));
-    p2p.SetDeviceAttribute("DataRate" ,
-                            DataRateValue(DataRate(LEAF_SPINE_DATA_RATE)));
 
-    //NS_LOG_INFO("Creating P2P Connections between SPINE and LEAF");
-
-    std::vector<NetDeviceContainer> leaf_spine_netDevContainer;
-    std::vector<std::vector<Ptr<PointToPointNetDevice>>> spines_leaves_netdevs(spine_count, std::vector<Ptr<PointToPointNetDevice>>(leaf_count, nullptr));
-    std::vector<std::vector<Ptr<PointToPointNetDevice>>> leaves_spines_netdevs(leaf_count, std::vector<Ptr<PointToPointNetDevice>>(spine_count, nullptr));
-
-    for(uint32_t i_spine = 0 ; i_spine < spine_count ; i_spine++)
-      {
-
-        for(uint32_t i_leaf = 0 ; i_leaf < leaf_count ; i_leaf++)
-          {
-            netDeviceContainer = p2p.Install(leaf.Get(i_leaf),
-                                              spine.Get(i_spine));
-
-            Ptr<PointToPointNetDevice> leaf_netDev = DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(0)) ;
-            Ptr<PointToPointNetDevice> spine_netDev =  DynamicCast<PointToPointNetDevice>(netDeviceContainer.Get(1));
-            spines_leaves_netdevs[i_spine][i_leaf] = spine_netDev;
-            leaves_spines_netdevs[i_leaf][i_spine] = leaf_netDev;
-
-
-            leaf_spine_netDevContainer.push_back(netDeviceContainer);
-          }
-      }
-
-    //p2pNetDevices = leaf_spine_netDevContainer;
-    p2pSpinesLeavesNetdevs = spines_leaves_netdevs;
-    p2pLeavesSpinesNetdevs = leaves_spines_netdevs;
     //NS_LOG_INFO("Assiging ip addresses");
     Ipv4AddressHelper ipv4Address;
     ipv4Address.SetBase(BASE_NETWORK , BASE_NETWORK_MASK);
@@ -169,34 +180,9 @@ public:
     return std::make_tuple(spine,leaf,servers);
   }
 
-  inline static void
-  GenerateTraffic(NodeContainer& clientNodes , NodeContainer& serverNodes)
-  {
-
-    UdpEchoServerHelper  udpServer(UDP_SERVER_PORT);
-    ApplicationContainer serversApps = udpServer.Install(serverNodes);
-
-    Ptr<Node> randomNode = serverNodes.Get(0);
-    Ptr<Ipv4> ipv4 = randomNode->GetObject<Ipv4>();
-    Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
-
-    UdpEchoClientHelper udpEchoClient(ipv4Address , UDP_SERVER_PORT);
-    udpEchoClient.SetAttribute("PacketSize" , UintegerValue(PACKET_SIZE));
-    udpEchoClient.SetAttribute("MaxPackets" , UintegerValue(MAX_PACKETS));
-    udpEchoClient.SetAttribute("Interval" , TimeValue(INTERVAL));
-
-
-    auto clientApps = udpEchoClient.Install(clientNodes);
-
-    clientApps.Start(Seconds(2.0));
-    clientApps.Stop(Seconds(100.0));
-    serversApps.Start(Seconds(1.0));
-    serversApps.Stop(Seconds(100.0));
-
-  }
   inline static std::vector<std::vector<uint64_t>> generate_traffic_matrix(uint32_t servers_count){
     std::default_random_engine generator;
-    std::uniform_int_distribution<uint64_t> distribution(10000000,1000000000);
+    std::uniform_int_distribution<uint64_t> distribution(10000000,100000000);
     std::vector<std::vector<uint64_t>> mat(servers_count, std::vector<uint64_t>(servers_count, 0));
     for (uint32_t i = 0; i < servers_count; ++i)
       {
@@ -212,7 +198,47 @@ public:
       }
     return mat;
   }
+  inline static void poisson_traffic_generator(NodeContainer& servers){
+    uint32_t port = 555;
+    std::vector<double> average_arrivals = {1.0/10.0,1.0/10.0,1.0/10.0,1.0/10.0};
+    std::random_device rd;
+    std::mt19937 rng (rd ());
+    for (uint32_t i = 0; i < servers.GetN(); ++i)
+      {
+        for (uint32_t j = 0; j < servers.GetN(); ++j)
+          {
 
+            uint32_t source_node = i;
+            uint32_t destination_node = j;
+            if(source_node == destination_node)
+              continue;
+            //std::cout<<"from="<<source_node<<",to="<<destination_node<<std::endl;
+
+            double average_arrival = average_arrivals[source_node];
+            double lamda = 1 / average_arrival;
+            std::exponential_distribution<double> exp (lamda);
+            double next_arrival = 0.0;
+            uint32_t count = 0;
+            do{
+                next_arrival += exp.operator() (rng);
+                uint32_t size = zipf_streams2();
+                //std::cout<<"\tnext_arrival="<<next_arrival<<" size="<<size<<std::endl;
+                auto pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(size*8*1000) / Globals::simulationTime));
+                Ptr<Ipv4> ipv4 = servers.Get (destination_node)->GetObject<Ipv4>();
+                Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
+                OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(ipv4Address, port++)));
+                onoff.SetConstantRate(DataRate(pareto_rate), PACKET_SIZE);
+                onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
+                onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
+                auto s = onoff.Install (servers.Get (source_node));
+                s.Start (Seconds (next_arrival));
+                count++;
+            }while(next_arrival < static_cast<double>(Globals::simulationTime-1));
+            //std::cout<<"\tnumber of streams="<<count<<std::endl;
+
+          }
+      }
+  }
   inline static void generate_traffic(NodeContainer& servers){
 
     auto mat = generate_traffic_matrix(servers.GetN());
@@ -245,6 +271,7 @@ public:
             onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
             onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
             onoff.Install (servers.Get (j));
+
 
             std::vector<uint32_t > flowz = zipf_streams(tcp_quantity);
             for (const auto &item : flowz){
@@ -296,7 +323,15 @@ public:
     //std::cout<<"Sum: "<<std::accumulate(ret.begin(), ret.end(), 0)<<std::endl;
     return ret;
   }
-
+  inline static uint32_t zipf_streams2(uint32_t min_size=20){
+    static std::random_device rd;
+    static std::mt19937 rng (rd ());
+    static std::uniform_real_distribution<double> distribution(0.0,1.0);
+    double u = distribution(rng);
+    double k = std::log10(4) / std::log10(5);
+    double t = min_size / std::pow(u , (1 / k));
+    return static_cast<uint32_t>(t);
+  }
   inline static void
   GetStats()
   {
@@ -304,7 +339,7 @@ public:
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
     //leaf1-spine1
     //std::cout << CollectData::m_q_drops[7][0]<<std::endl;
-    std::cout << StateActionManager::m_q_drops_leaves[0][0]<<" "<<StateActionManager::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+    std::cout <<StateActionManager::m_q_size_leaves[0][0]<<" "<< StateActionManager::m_q_drops_leaves[0][0]<<" "<<StateActionManager::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
     Simulator::Schedule(Seconds(1) , &GetStats);
   }
 
@@ -312,7 +347,7 @@ public:
     std::fstream fout;
 
     // opens an existing csv file or creates a new file.
-    fout.open("/home/slahmer/PycharmProjects/pythonProject/file.csv", std::ios::out | std::ios::app);
+    fout.open("file.csv", std::ios::out | std::ios::app);
     fout<<"fid,srcaddr,srcport,destaddr,destport,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
 
     Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowhelp.GetClassifier ());
@@ -328,19 +363,19 @@ public:
 #define ATTRIB(name) << "," << flowI->second.name
 #define ATTRIB_TIME(name) <<","<<flowI->second.name.As (Time::NS)
         fout << flowI->first<<","<<t.sourceAddress<<","<<t.sourcePort<<","<<t.destinationAddress<<","<<t.destinationPort
-                                                                                                                           ATTRIB_TIME (timeFirstTxPacket)
-                                                                                                                               ATTRIB_TIME (timeFirstRxPacket)
-                                                                                                                                   ATTRIB_TIME (timeLastTxPacket)
-                                                                                                                                       ATTRIB_TIME (timeLastRxPacket)
-                                                                                                                                           ATTRIB_TIME (delaySum)
-                                                                                                                                               ATTRIB_TIME (jitterSum)
-                                                                                                                                                   ATTRIB_TIME (lastDelay)
-                                                                                                                                                       ATTRIB (txBytes)
-                                                                                                                                                           ATTRIB (rxBytes)
-                                                                                                                                                               ATTRIB (txPackets)
-                                                                                                                                                                   ATTRIB (rxPackets)
-                                                                                                                                                                       ATTRIB (lostPackets)
-                                                                                                                                                                           ATTRIB (timesForwarded);
+         ATTRIB_TIME (timeFirstTxPacket)
+         ATTRIB_TIME (timeFirstRxPacket)
+             ATTRIB_TIME (timeLastTxPacket)
+                 ATTRIB_TIME (timeLastRxPacket)
+         ATTRIB_TIME (delaySum)
+         ATTRIB_TIME (jitterSum)
+             ATTRIB_TIME (lastDelay)
+                 ATTRIB (txBytes)
+                     ATTRIB (rxBytes)
+                         ATTRIB (txPackets)
+                             ATTRIB (rxPackets)
+                                 ATTRIB (lostPackets)
+                                     ATTRIB (timesForwarded);
         if (flowI->second.packetsDropped.size() == 0){
             fout <<",0,0,0,0";
           }

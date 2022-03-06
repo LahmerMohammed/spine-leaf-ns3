@@ -114,10 +114,16 @@ public:
 
   void init_routes(const Ptr<Ipv4>& ipv4, const Ipv4GlobalRouting::HostRoutes&, const Ipv4GlobalRouting::NetworkRoutes&, uint32_t );
 
-  inline bool SetDistribution(const std::vector<float>& dist){
-    m_distribution = std::discrete_distribution<int>(dist.begin(), dist.end());
-    m_distribution.probabilities();
-    return true;
+  bool SetDistribution(const std::vector<float>& dist);
+  inline std::vector<double> getProbs(){
+    return m_distribution.probabilities();
+  }
+  inline void resetStats(){
+    stats[0] = 0;
+    stats[1] = 0;
+  }
+  inline std::vector<uint64_t>& getStats(){
+    return stats;
   }
 private:
   uint32_t m_d;
@@ -127,6 +133,7 @@ private:
 
   std::discrete_distribution<int> m_distribution;
   std::mt19937 m_generator;
+  std::vector<uint64_t> stats;
 
 
   std::vector<Ptr<Ipv4Route>> Lookup (Ipv4Address dest, const Ptr<NetDevice>& oif = nullptr);
