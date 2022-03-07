@@ -48,7 +48,7 @@ main(int argc , char* argv[])
 
   //TopologyBuilder::generate_traffic(servers);
   TopologyBuilder::InitRLRouting (leaf);
-  //Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&StateActionManager::TraceP2PDevQueueDrop));
+  Config::Connect("/NodeList/*/DeviceList/*/TxQueue/Drop", MakeCallback(&StateActionManager::TraceP2PDevQueueDrop));
 
 
 
@@ -64,18 +64,18 @@ main(int argc , char* argv[])
 
   // OpenGym Env
 
-  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
-  Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
-  myGymEnv->SetOpenGymInterface(openGymInterface);
+  //Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (Globals::openGymPort);
+  //Ptr<DataCenterEnv> myGymEnv = CreateObject<DataCenterEnv> (Seconds(Globals::envStepTime));
+  //myGymEnv->SetOpenGymInterface(openGymInterface);
 
-  //Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
+  Simulator::Schedule(Seconds(1) , &TopologyBuilder::GetStats );
   StateActionManager::init ();
   Simulator::Stop(Seconds(Globals::simulationTime));
   Simulator::Run();
 
-  //TopologyBuilder::process_stats(flowMonitor, flowHelper);
+  TopologyBuilder::process_stats(flowMonitor, flowHelper, "/home/slahmer/PycharmProjects/pythonProject/file.csv");
   //flowMonitor->SerializeToXmlFile("flow2.xml", true, true);
-  openGymInterface->NotifySimulationEnd();
+  //openGymInterface->NotifySimulationEnd();
   Simulator::Destroy();
 
   return 0;

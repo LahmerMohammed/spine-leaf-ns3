@@ -980,7 +980,9 @@ Packet::PeekPacketTag (Tag &tag) const
   bool found = m_packetTagList.Peek (tag);
   return found;
 }
-void 
+
+void
+
 Packet::RemoveAllPacketTags (void)
 {
   NS_LOG_FUNCTION (this);

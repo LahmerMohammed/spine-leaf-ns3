@@ -125,7 +125,7 @@ ns3::Ipv4RlRouting::RouteInput (ns3::Ptr<const ns3::Packet> p, const ns3::Ipv4He
 
       NS_ASSERT (candidates.size() == m_distribution.probabilities().size());
 
-      auto index = m_distribution(m_generator);
+      auto index = 0;//m_distribution(m_generator);
       stats[index]++;
       MyTag tmp;
       auto outputRoute = candidates[index];

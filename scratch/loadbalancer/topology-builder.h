@@ -8,6 +8,7 @@
 #include "spine-leaf.h"
 #include "globals.h"
 #include "ns3/internet-module.h"
+
 using namespace ns3;
 
 class TopologyBuilder{
@@ -221,9 +222,10 @@ public:
             uint32_t count = 0;
             do{
                 next_arrival += exp.operator() (rng);
-                uint32_t size = zipf_streams2();
+                auto size = static_cast<double>(zipf_streams2());
                 //std::cout<<"\tnext_arrival="<<next_arrival<<" size="<<size<<std::endl;
-                auto pareto_rate = static_cast<uint32_t>(2 * (static_cast<double>(size*8*1000) / Globals::simulationTime));
+                auto pareto_rate =30000000; //static_cast<uint32_t>(2 * (static_cast<double>(size*8*1000) / Globals::simulationTime));
+                double duration = size*8*1000/pareto_rate;
                 Ptr<Ipv4> ipv4 = servers.Get (destination_node)->GetObject<Ipv4>();
                 Ipv4Address ipv4Address = ipv4->GetAddress(1,0).GetLocal();
                 OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(ipv4Address, port++)));
@@ -232,6 +234,7 @@ public:
                 onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0.5]"));
                 auto s = onoff.Install (servers.Get (source_node));
                 s.Start (Seconds (next_arrival));
+                s.Stop (Seconds (next_arrival+duration));
                 count++;
             }while(next_arrival < static_cast<double>(Globals::simulationTime-1));
             //std::cout<<"\tnumber of streams="<<count<<std::endl;
@@ -339,15 +342,72 @@ public:
     /// stats of node-2-interface-1 queue (leaf) connected to p2p channel with the node-0 (spine)
     //leaf1-spine1
     //std::cout << CollectData::m_q_drops[7][0]<<std::endl;
-    std::cout <<StateActionManager::m_q_size_leaves[0][0]<<" "<< StateActionManager::m_q_drops_leaves[0][0]<<" "<<StateActionManager::m_bandwidths_leaves[0][0]<<" "<<Simulator::Now().GetMilliSeconds()<<std::endl;
+    cout.precision(4);
+    std::cout<<"#####################"<<Simulator::Now().GetSeconds()<<"###########################"<<std::endl;
+    std::cout<<"queue-size-leaf-spine:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            std::cout <<StateActionManager::m_q_size_leaves[i][j]<<" ";
+          }
+        std::cout<<std::endl;
+      }
+    std::cout<<"queue-size--spine-leaf:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            std::cout <<StateActionManager::m_q_size_spines[i][j]<<" ";
+          }
+        std::cout<<std::endl;
+      }
+
+    std::cout<<"drop-leaf-spine:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            std::cout <<StateActionManager::m_q_drops_leaves[i][j]<<" ";
+          }
+        std::cout<<std::endl;
+      }
+    std::cout<<"drop--spine-leaf:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            std::cout <<StateActionManager::m_q_drops_spines[i][j]<<" ";
+          }
+        std::cout<<std::endl;
+      }
+    std::cout<<"bandwith-leaf-spine:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            long double tmp = StateActionManager::m_bandwidths_leaves[i][j];
+            std::cout <<tmp<<" ";
+          }
+        std::cout<<std::endl;
+      }
+    std::cout<<"bandwith--spine-leaf:"<<std::endl;
+    for (uint32_t i = 0; i < Globals::spineCount; ++i)
+      {
+        for (uint32_t j = 0; j < Globals::leafCount; ++j)
+          {
+            std::cout <<StateActionManager::m_bandwidths_spines[i][j]<<" ";
+          }
+        std::cout<<std::endl;
+      }
     Simulator::Schedule(Seconds(1) , &GetStats);
   }
 
-  inline static void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flowhelp){
+  inline static void process_stats(const Ptr<FlowMonitor>& flow_monitor, FlowMonitorHelper& flowhelp, const std::string& filename){
     std::fstream fout;
 
     // opens an existing csv file or creates a new file.
-    fout.open("file.csv", std::ios::out | std::ios::app);
+    fout.open(filename, std::ios::out | std::ios::app);
     fout<<"fid,srcaddr,srcport,destaddr,destport,first_tx,first_rx,last_tx,last_rx,delay_sum,jitter_sum,last_delay,tx_bytes,rx_bytes,tx_packets,rx_packets,lost_packets,times_forwarded,pdrop0,pdrop1,pdrop2,pdrop3,bdrop0,bdrop1,bdrop2,bdrop3\n";
 
     Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowhelp.GetClassifier ());
@@ -360,22 +420,22 @@ public:
         Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (flowI->first);
 
 
-#define ATTRIB(name) << "," << flowI->second.name
-#define ATTRIB_TIME(name) <<","<<flowI->second.name.As (Time::NS)
+        #define ATTRIB(name) << "," << flowI->second.name
+        #define ATTRIB_TIME(name) <<","<<flowI->second.name.GetNanoSeconds()
         fout << flowI->first<<","<<t.sourceAddress<<","<<t.sourcePort<<","<<t.destinationAddress<<","<<t.destinationPort
          ATTRIB_TIME (timeFirstTxPacket)
          ATTRIB_TIME (timeFirstRxPacket)
-             ATTRIB_TIME (timeLastTxPacket)
-                 ATTRIB_TIME (timeLastRxPacket)
+         ATTRIB_TIME (timeLastTxPacket)
+         ATTRIB_TIME (timeLastRxPacket)
          ATTRIB_TIME (delaySum)
          ATTRIB_TIME (jitterSum)
-             ATTRIB_TIME (lastDelay)
-                 ATTRIB (txBytes)
-                     ATTRIB (rxBytes)
-                         ATTRIB (txPackets)
-                             ATTRIB (rxPackets)
-                                 ATTRIB (lostPackets)
-                                     ATTRIB (timesForwarded);
+         ATTRIB_TIME (lastDelay)
+         ATTRIB (txBytes)
+         ATTRIB (rxBytes)
+         ATTRIB (txPackets)
+         ATTRIB (rxPackets)
+         ATTRIB (lostPackets)
+         ATTRIB (timesForwarded);
         if (flowI->second.packetsDropped.size() == 0){
             fout <<",0,0,0,0";
           }

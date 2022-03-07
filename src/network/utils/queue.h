@@ -186,7 +186,7 @@ public:
    * \return true if the queue should overflow, false otherwise.
    */
   bool WouldOverflow (uint32_t nPackets, uint32_t nBytes) const;
-
+  void resetStats();
 #if 0
   // average calculation requires keeping around
   // a buffer with the date of arrival of past received packets

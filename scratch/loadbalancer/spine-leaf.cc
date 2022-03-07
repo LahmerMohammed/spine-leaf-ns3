@@ -32,13 +32,12 @@ StateActionManager::GetData()
             m_q_size_spines[i][j] = zz->GetCurrentSize().GetValue();
 
             auto tmp = TopologyBuilder::p2pSpinesLeavesNetdevs[i][j]->time_slot();
-            auto dura= static_cast<long double>(NANO_TO_SEC(tmp.first));
-            long double max =  Globals::envStepTime * tmp.second.GetBitRate();
+            auto dura= NANO_TO_SEC(tmp.first);
             if(dura == 0.0){
-                m_bandwidths_spines[i][j] = max;
+                m_bandwidths_spines[i][j] = 0;
               }
             else{
-                m_bandwidths_spines[i][j] = max - static_cast<long double>(tmp.second.GetBitRate()) *  dura;//* tmp.second.GetBitRate();
+                m_bandwidths_spines[i][j] = dura / Globals::envStepTime;//* tmp.second.GetBitRate();
             }
             //m_bandwidths_spines[i][j] = tmp.first ;//* tmp.second.GetBitRate();
           }
@@ -49,35 +48,34 @@ StateActionManager::GetData()
         for (uint32_t j = 0; j < Globals::spineCount; ++j)
           {
             auto xx=  TopologyBuilder::p2pLeavesSpinesNetdevs[j][leaf];
-            m_q_drops_leaves[leaf][j] = xx->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
+            m_q_drops_leaves[j][leaf] = xx->GetQueue()->GetTotalDroppedPacketsBeforeEnqueue();
             xx->GetQueue()->resetStats();
-            m_q_size_leaves[leaf][j] = xx->GetQueue()->GetCurrentSize().GetValue();
+            m_q_size_leaves[j][leaf] = xx->GetQueue()->GetCurrentSize().GetValue();
+
 
             auto tmp = xx->time_slot();
-            long double max =  Globals::envStepTime * tmp.second.GetBitRate();
-            auto dura= static_cast<long double>(NANO_TO_SEC(tmp.first));
+            auto dura= NANO_TO_SEC(tmp.first);
             if(dura == 0.0){
-                m_bandwidths_leaves[leaf][j] = max;
+                m_bandwidths_leaves[j][leaf] = 0;
             }
             else{
-                m_bandwidths_leaves[leaf][j] = max - static_cast<long double>(tmp.second.GetBitRate()) *  dura;//* tmp.second.GetBitRate();
+                m_bandwidths_leaves[j][leaf] = dura / Globals::envStepTime;;//* tmp.second.GetBitRate();
             }
-
           }
       }
   }
 
   //Print distribution
-  std::cout<<"Statistics"<<std::endl;
+  //std::cout<<"Statistics"<<std::endl;
   for (uint64_t i = 0; i < Globals::leafCount; ++i)
     {
-      std::cout<<"Leaf("<<i<<")"<<std::endl;
+      //std::cout<<"Leaf("<<i<<")"<<std::endl;
       auto tmp = TopologyBuilder::leaf_rl_routers[i];
       auto s = tmp->getStats();
       auto s2 = tmp->getProbs();
 
-      std::cout<<"\troute1="<<s[0]<<" , route2="<<s[1]<<std::endl;
-      std::cout<<"\tprob1="<<s2[0]<<" , prob2="<<s2[1]<<std::endl;
+      //std::cout<<"\troute1="<<s[0]<<" , route2="<<s[1]<<std::endl;
+      //std::cout<<"\tprob1="<<s2[0]<<" , prob2="<<s2[1]<<std::endl;
 
     }
 }

@@ -232,5 +232,10 @@ QueueBase::WouldOverflow (uint32_t nPackets, uint32_t nBytes) const
       return (m_nBytes + nBytes > m_maxSize.GetValue ());
     }
 }
+void
+QueueBase::resetStats ()
+{
+  m_nTotalDroppedBytesBeforeEnqueue = 0;
+}
 
 } // namespace ns3
