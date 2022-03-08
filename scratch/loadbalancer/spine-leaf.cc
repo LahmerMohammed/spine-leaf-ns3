@@ -37,7 +37,7 @@ StateActionManager::GetData()
                 m_bandwidths_spines[i][j] = 0;
               }
             else{
-                m_bandwidths_spines[i][j] = dura / Globals::envStepTime;//* tmp.second.GetBitRate();
+                m_bandwidths_spines[i][j] = dura * tmp.second.GetBitRate();
             }
             //m_bandwidths_spines[i][j] = tmp.first ;//* tmp.second.GetBitRate();
           }
@@ -59,7 +59,7 @@ StateActionManager::GetData()
                 m_bandwidths_leaves[j][leaf] = 0;
             }
             else{
-                m_bandwidths_leaves[j][leaf] = dura / Globals::envStepTime;;//* tmp.second.GetBitRate();
+                m_bandwidths_leaves[j][leaf] = dura * tmp.second.GetBitRate();
             }
           }
       }
